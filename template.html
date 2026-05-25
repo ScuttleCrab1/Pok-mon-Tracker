@@ -218,6 +218,15 @@ tr:hover td{background:rgba(240,192,64,.025)}
   .tab{font-size:10px;padding:5px 10px}
 }
 
+
+/* ── LIENS EBAY / CARDMARKET ── */
+.ext-links{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ext-link{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;text-decoration:none;transition:all .15s;font-weight:500}
+.ext-link-ebay{background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.3);color:var(--gold)}
+.ext-link-ebay:hover{background:rgba(240,192,64,.2);border-color:var(--gold)}
+.ext-link-cm{background:rgba(46,204,138,.1);border:1px solid rgba(46,204,138,.3);color:var(--green)}
+.ext-link-cm:hover{background:rgba(46,204,138,.2);border-color:var(--green)}
+
 </style>
 </head>
 <body>
@@ -710,16 +719,26 @@ function renderItemsTable(){
     else{va=a._actuel;vb=b._actuel;}
     return _sortAsc?va-vb:vb-va;
   });
-  document.getElementById('tbody-items').innerHTML=sorted.map(i=>`
-    <tr>
+  document.getElementById('tbody-items').innerHTML=sorted.map(i=>{
+    const typeLabel={'etb':'ETB','coffret':'Coffret','upc':'UPC','mini_tin':'Mini Tin','bundle':'Bundle','tripack':'Tripack'}[i['Item']]||i['Item'];
+    const ebayQ=`${typeLabel} ${i['Série']} Pokemon`;
+    const cmQ=i['Série'];
+    return `<tr>
       <td>${tagType(i['Item'])}</td>
-      <td><div class="td-name">${i['Série']}</div></td>
+      <td>
+        <div class="td-name">${i['Série']}</div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <a class="ext-link ext-link-ebay" style="padding:3px 8px;font-size:9px" href="${ebayUrl(ebayQ)}" target="_blank" rel="noopener">🛒 eBay</a>
+          <a class="ext-link ext-link-cm" style="padding:3px 8px;font-size:9px" href="${cardmarketUrl(cmQ)}" target="_blank" rel="noopener">📊 CM</a>
+        </div>
+      </td>
       <td class="tr mono">${i._qte}</td>
       <td class="tr mono">${i._achat>0?eur(i._achat):'<span style="color:var(--muted)">—</span>'}</td>
       <td class="tr mono" style="color:var(--gold)">${eur(i._actuel)}</td>
       <td class="tr">${dHtml(i._gain)}</td>
       <td class="tr mono">${i._pct!==null?`<span class="${i._pct>=0?'change-up':'change-down'}">${i._pct>=0?'+':''}${i._pct.toFixed(1)}%</span>`:'<span style="color:var(--muted)">—</span>'}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 
@@ -852,6 +871,65 @@ function volLabel(cv) {
   return '🔴 Volatile';
 }
 
+
+/* ── TABLE MAPPING SÉRIES FR → IDs API POKÉMON TCG ── */
+const TCG_SET_MAP = {
+  /* ÉCARLATE ET VIOLET */
+  'Ecarlate et Violet':'sv1','Evolutions Prismatiques':'sv8pt5','Fable Nebuleuse':'sv6pt5',
+  'Faille Paradoxe':'sv4','Flammes Fantasmagoriques':'sv3','Flammes Obsidiennes':'sv3pt5',
+  'Forces Temporelles':'sv5','Mascarade Crepusculaire':'sv6','Couronne Stellaire':'sv7',
+  'Etincelles Deferlantes':'sv8','Aventures Ensemble':'sv6','Heros Transcendants':'sv5',
+  'Destinees de Paldea':'sv4pt5','151':'sv3pt5','Promos Ecarlate et Violet':'svp',
+  /* ÉPÉE ET BOUCLIER */
+  'Astres Radieux':'swsh10','Stars Etincelantes':'swsh9','Forces Cachees':'swsh6',
+  'Frontieres Franchies':'swsh7','Origine Perdue':'swsh11','Zenith Supreme':'swsh12pt5',
+  'Promos Epee et Bouclier':'swshp',
+  /* SOLEIL ET LUNE */
+  'Rivalites Destinees':'sm8','Duo de Choc':'sm9','Alliance Infaillible':'sm10',
+  /* XY */
+  'Mega-Evolution':'xy8','Promos Mega-Evolution':'xyp',
+  /* NOIR ET BLANC */
+  'Pouvoirs Emergeants':'bw2','Rivaux Emergeants':'bw3','Foudre Noire':'bw5',
+  'Dragons Exaltes':'bw6','Glaciation Plasma':'bw8','Flamme Blanche':'bw9',
+  'Promos Black Star Noir et Blanc':'bwp',
+  /* HEARTGOLD SOULSILVER */
+  'Heartgold Soulsilver':'hgss1','Indomptable':'hgss2','L Appel des Legendes':'hgss3',
+  'Triomphe':'hgss4','Vainqueurs Supremes':'hgss5',
+  /* EX */
+  'Rubis et Saphir':'ex1','Rouge Feu Vert Feuille':'ex2','Tempete de Sable':'ex3',
+  'Ile des Dragons':'ex4','Team Magma Vs Team Aqua':'ex5','Legendes Oubliees':'ex6',
+  'Emeraude':'ex10','Espece Delta':'ex11','Dragon':'ex12','Tresors Mysterieux':'ex13',
+  'Deoxys':'ex14','Dechainement':'ex15',
+  /* WIZARDS */
+  'Set de Base':'base1','Team Rocket':'base4',
+  'Expedition':'ecard1','Aquapolis':'ecard2',
+};
+
+
+/* ── GÉNÉRATEUR URLS EBAY & CARDMARKET ── */
+function ebayUrl(query) {
+  const params = new URLSearchParams({
+    '_nkw': query,
+    'LH_Complete': '1',
+    'LH_Sold': '1',
+    '_sacat': '2536',
+  });
+  return 'https://www.ebay.fr/sch/i.html?' + params.toString();
+}
+function cardmarketUrl(query) {
+  return 'https://www.cardmarket.com/fr/Pokemon/Products/Search?searchString=' + encodeURIComponent(query);
+}
+function extLinksHtml(ebayQ, cmQ) {
+  return `<div class="ext-links">
+    <a class="ext-link ext-link-ebay" href="${ebayUrl(ebayQ)}" target="_blank" rel="noopener">
+      🛒 eBay — Ventes réussies
+    </a>
+    <a class="ext-link ext-link-cm" href="${cardmarketUrl(cmQ)}" target="_blank" rel="noopener">
+      📊 Cardmarket
+    </a>
+  </div>`;
+}
+
 /* ── MODAL ── */
 let _modalChart = null;
 
@@ -902,6 +980,10 @@ function openModal(key) {
           <span class="tag t-other">${c['Langue Carte']||'FR'}</span>
           <span class="modal-volatility ${volClass(cv)}">${volLabel(cv)}</span>
         </div>
+        ${extLinksHtml(
+          c['Nom']+' '+(c['Numéro']||'').split('/')[0],
+          c['Nom']+' '+(c['Numéro']||'').split('/')[0]
+        )}
       </div>
     </div>
     <div class="modal-chart-title">Évolution de la valeur</div>
@@ -939,19 +1021,43 @@ function openModal(key) {
     }
   });
 
-  // Chercher image via API Pokémon TCG
-  const searchName = encodeURIComponent(c['Nom']);
-  fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${searchName}"&pageSize=5`)
-    .then(r=>r.json())
-    .then(data=>{
-      if (data.data && data.data.length > 0) {
-        const img = data.data[0].images?.large || data.data[0].images?.small;
-        if (img) {
-          document.getElementById('modal-img-wrap').innerHTML = `<img src="${img}" alt="${c['Nom']}" loading="lazy">`;
-        }
+  // Chercher image via API Pokémon TCG par numéro + set
+  const setId = TCG_SET_MAP[c['Série']] || null;
+  const num   = (c['Numéro']||'').split('/')[0].replace(/^0+/,'');
+
+  // Stratégie : essayer plusieurs requêtes jusqu'à trouver une image
+  const imgWrap = document.getElementById('modal-img-wrap');
+  
+  async function tryFetch(query) {
+    const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&pageSize=10`);
+    const data = await r.json();
+    if (!data.data || data.data.length === 0) return null;
+    const match = data.data.find(card => {
+      const cardNum = (card.number||'').replace(/^0+/,'');
+      return cardNum === num;
+    }) || data.data[0];
+    return match?.images?.large || match?.images?.small || null;
+  }
+
+  (async () => {
+    try {
+      let img = null;
+      // Tentative 1 : numéro + set exact
+      if (setId && num) img = await tryFetch(`number:${num} set.id:${setId}`);
+      // Tentative 2 : set seul, prendre la carte avec ce numéro
+      if (!img && setId) img = await tryFetch(`set.id:${setId} number:${num}`);
+      // Tentative 3 : numéro seul dans tous les sets de la même série
+      if (!img && num) img = await tryFetch(`number:${num}`);
+      
+      if (img) {
+        imgWrap.innerHTML = `<img src="${img}" alt="${c['Nom']}" loading="lazy" style="border-radius:10px;width:100%">`;
+      } else {
+        imgWrap.innerHTML = '<div class="modal-img-placeholder" style="padding:20px;color:var(--muted);text-align:center;font-size:13px">Image non disponible</div>';
       }
-    })
-    .catch(()=>{});
+    } catch(e) {
+      imgWrap.innerHTML = '<div class="modal-img-placeholder" style="padding:20px;color:var(--muted);text-align:center;font-size:13px">Image non disponible</div>';
+    }
+  })();
 }
 
 function closeModal(e) {
