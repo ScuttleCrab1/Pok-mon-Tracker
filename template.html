@@ -26,13 +26,6 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .header-right{display:flex;align-items:center;gap:10px}
 .p1-badge{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:5px 14px;border-radius:4px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000}
 
-.btn{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;transition:all .15s}
-.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000}
-.btn-gold:hover{filter:brightness(1.1);transform:translateY(-1px)}
-.btn-gold:disabled{opacity:.35;cursor:not-allowed;transform:none}
-.btn-ghost{background:var(--s2);color:var(--muted2);border:1px solid var(--border2)}
-.btn-ghost:hover{color:var(--text);border-color:var(--muted)}
-.import-hint{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 
 #dashboard{position:relative;z-index:10;padding:28px 36px}
 
@@ -156,30 +149,30 @@ tr:hover td{background:rgba(240,192,64,.025)}
   </div>
   <div class="header-right">
     <span class="p1-badge" id="period-badge">PÉRIODE 1</span>
-    <button class="btn btn-ghost" onclick="resetImport()">↺ Reset</button>
+    
   </div>
 </header>
 
   <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <div class="dz-mini" id="dz-p1-cartes" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p1','cartes')">
-      <input type="file" accept=".csv" onchange="fileInput(event,'p1','cartes')">
+    <div class="dz-mini" id="dz-p1-cartes">
+      
       <span class="dz-period-tag p1">P1</span> 🃏 Cartes <span id="name-p1-cartes"></span>
     </div>
-    <div class="dz-mini" id="dz-p1-items" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p1','items')">
-      <input type="file" accept=".csv" onchange="fileInput(event,'p1','items')">
+    <div class="dz-mini" id="dz-p1-items">
+      
       <span class="dz-period-tag p1">P1</span> 📦 Scellé <span id="name-p1-items"></span>
     </div>
-    <div class="dz-mini" id="dz-p2-cartes" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p2','cartes')">
-      <input type="file" accept=".csv" onchange="fileInput(event,'p2','cartes')">
+    <div class="dz-mini" id="dz-p2-cartes">
+      
       <span class="dz-period-tag p2">P2</span> 🃏 Cartes <span id="name-p2-cartes"></span>
     </div>
-    <div class="dz-mini" id="dz-p2-items" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p2','items')">
-      <input type="file" accept=".csv" onchange="fileInput(event,'p2','items')">
+    <div class="dz-mini" id="dz-p2-items">
+      
       <span class="dz-period-tag p2">P2</span> 📦 Scellé <span id="name-p2-items"></span>
     </div>
   </div>
-  <button class="btn btn-gold" id="btn-apply" onclick="applyImport()" disabled>Appliquer →</button>
-  <span class="import-hint" id="import-hint">Glissez vos CSV pour mettre à jour ou comparer</span>
+  
+  
 </div>
 
 <main id="dashboard">
@@ -422,51 +415,7 @@ function parseItems(csv){
 
 /* ── FILE LOADING ── */
 const _pending={p1:{cartes:null,items:null},p2:{cartes:null,items:null}};
-function loadFile(file,period,type){
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const parsed=type==='cartes'?parseCartes(e.target.result):parseItems(e.target.result);
-      _pending[period][type]=parsed;
-      document.getElementById(`dz-${period}-${type}`).classList.add('loaded');
-      document.getElementById(`name-${period}-${type}`).textContent=' ✓';
-      updateImportState();
-    }catch(err){alert('Erreur : '+err.message);}
-  };
-  reader.readAsText(file,'utf-8');
-}
-function fileInput(e,p,t){if(e.target.files[0])loadFile(e.target.files[0],p,t);}
-function dzDrag(e,el){e.preventDefault();el.classList.add('dragover');}
-function dzLeave(el){el.classList.remove('dragover');}
-function dzDrop(e,p,t){e.preventDefault();document.getElementById(`dz-${p}-${t}`).classList.remove('dragover');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0],p,t);}
-function updateImportState(){
-  const p1ok=_pending.p1.cartes&&_pending.p1.items;
-  const p2ok=_pending.p2.cartes&&_pending.p2.items;
-  
-  document.getElementById('import-hint').textContent=
-    p1ok&&p2ok?'✓ P1 + P2 prêtes — comparaison disponible !':
-    p1ok?'✓ P1 prête — ajoutez P2 pour comparer':
-    p2ok?'✓ P2 prête':
-    'Glissez vos CSV pour mettre à jour ou comparer';
-}
-function applyImport(){
-  if(_pending.p1.cartes)DATA.p1.cartes=_pending.p1.cartes;
-  if(_pending.p1.items)DATA.p1.items=_pending.p1.items;
-  if(_pending.p2.cartes)DATA.p2.cartes=_pending.p2.cartes;
-  if(_pending.p2.items)DATA.p2.items=_pending.p2.items;
-  renderAll();
-}
-function resetImport(){
-  ['p1','p2'].forEach(p=>['cartes','items'].forEach(t=>{
-    _pending[p][t]=null;
-    document.getElementById(`dz-${p}-${t}`).classList.remove('loaded');
-    document.getElementById(`name-${p}-${t}`).textContent='';
-  }));
-  DATA.p2.cartes=null;DATA.p2.items=null;
-  
-  document.getElementById('period-badge').textContent='PÉRIODE 1';
-  renderAll();
-}
+
 
 /* ── HELPERS ── */
 function eur(n){return(n||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
@@ -498,7 +447,7 @@ function computeStats(cartes,items){
     blocs[c['Bloc']].count++;blocs[c['Bloc']].val+=c._actuel;
   });
   items.forEach(i=>{if(!types[i['Item']])types[i['Item']]={gain:0,val:0};types[i['Item']].gain+=i._gain;types[i['Item']].val+=i._actuel;});
-  const top10=[...cartes].sort((a,b)=>b._actuel-a._actuel).slice(0,10);
+  const top10=[...cartes].sort((a,b)=>b._actuel-a._actuel).slice(0,5);
   const worstItem=[...items].filter(i=>i._achat>0).sort((a,b)=>a._gain-b._gain)[0];
   const bestPct=[...items].filter(i=>i._achat>0&&i._pct!==null).sort((a,b)=>b._pct-a._pct)[0];
   return{totalCartes,totalItems,gainItems,etats,blocs,types,top10,worstItem,bestPct,nbCartes:cartes.length,nbItems:items.length};
@@ -601,8 +550,8 @@ function renderPerfTables(cartes, items){
       perfc.push({nom:a['Nom'],serie:a['Série'],etat:a['État'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
     }
   });
-  const topCUp=[...perfc].sort((a,b)=>b.diff-a.diff).slice(0,10);
-  const topCDown=[...perfc].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,10);
+  const topCUp=[...perfc].sort((a,b)=>b.diff-a.diff).slice(0,5);
+  const topCDown=[...perfc].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
 
   const rowC=(m,i,up)=>`<tr>
     <td class="rank">${i+1}</td>
@@ -630,8 +579,8 @@ function renderPerfTables(cartes, items){
       perfi.push({serie:a['Série'],type:a['Item'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
     }
   });
-  const topIUp=[...perfi].sort((a,b)=>b.diff-a.diff).slice(0,10);
-  const topIDown=[...perfi].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,10);
+  const topIUp=[...perfi].sort((a,b)=>b.diff-a.diff).slice(0,5);
+  const topIDown=[...perfi].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
 
   const rowI=(m,i,up)=>`<tr>
     <td class="rank">${i+1}</td>
@@ -723,7 +672,7 @@ function renderCompare(c1,i1,c2,i2){
       ${newCards.length?`<div><div class="section-title">✨ Nouvelles cartes (${newCards.length})</div>
         <div class="table-wrap"><div class="table-scroll"><table>
           <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur</th></tr></thead>
-          <tbody>${newCards.slice(0,10).map(c=>`<tr>
+          <tbody>${newCards.slice(0,5).map(c=>`<tr>
             <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
             <td>${tagEtat(c['État'])}</td><td class="tr mono change-new">+${eur(c._actuel)}</td>
           </tr>`).join('')}</tbody>
@@ -731,7 +680,7 @@ function renderCompare(c1,i1,c2,i2){
       ${goneCards.length?`<div><div class="section-title">🔴 Cartes retirées (${goneCards.length})</div>
         <div class="table-wrap"><div class="table-scroll"><table>
           <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur P1</th></tr></thead>
-          <tbody>${goneCards.slice(0,10).map(c=>`<tr>
+          <tbody>${goneCards.slice(0,5).map(c=>`<tr>
             <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
             <td>${tagEtat(c['État'])}</td><td class="tr mono change-gone">${eur(c._actuel)}</td>
           </tr>`).join('')}</tbody>
@@ -750,7 +699,7 @@ function savePeriod(){
   const c=DATA.p1.cartes, i=DATA.p1.items;
   PERIODS.push({
     id: Date.now(),
-    name, date: date||new Date().toISOString().slice(0,10),
+    name, date: date||new Date().toISOString().slice(0,5),
     cartes: c, items: i,
     totalCartes: c.reduce((s,x)=>s+x._actuel,0),
     totalItems:  i.reduce((s,x)=>s+x._actuel,0),
@@ -873,8 +822,8 @@ function renderTop10(){
         perf.push({nom:a['Nom'],serie:a['Série'],etat:a['État'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
       }
     });
-    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,10);
-    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,10);
+    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,5);
+    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
 
     document.getElementById('top10-content').innerHTML=`
       <div class="g2">
@@ -923,8 +872,8 @@ function renderTop10(){
         perf.push({serie:a['Série'],type:a['Item'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
       }
     });
-    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,10);
-    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,10);
+    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,5);
+    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
 
     document.getElementById('top10-content').innerHTML=`
       <div class="g2">
@@ -985,7 +934,7 @@ function setTab(name){
 }
 
 /* ── INIT ── */
-document.getElementById('period-date-input').value=new Date().toISOString().slice(0,10);
+document.getElementById('period-date-input').value=new Date().toISOString().slice(0,5);
 renderAll();
 </script>
 </body>
