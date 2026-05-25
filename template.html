@@ -954,13 +954,12 @@ function renderTop10(){
 
 /* ── RENDER ALL ── */
 function renderAll(){
-  const c1=DATA.p1.cartes,i1=DATA.p1.items;
-  const c2=DATA.p2.cartes,i2=DATA.p2.items;
+  const c1=DATA.p1.cartes, i1=DATA.p1.items;
   const s1=computeStats(c1,i1);
-  const s2=(c2&&i2)?computeStats(c2,i2):null;
-  renderOverview(s1,s2);
+  renderOverview(s1, null);
   renderCartes(c1);
   renderScelle(i1);
+  renderPerfTables(c1, i1);
   renderCompare();
   document.getElementById('footer-info').textContent=`${c1.length} cartes · ${i1.length} items · Total : ${(s1.totalCartes+s1.totalItems).toLocaleString('fr-FR',{minimumFractionDigits:2})} €`;
   renderEvolution();
@@ -976,7 +975,7 @@ function setTab(name){
 }
 
 /* ── INIT ── */
-document.getElementById('period-date-input').value=new Date().toISOString().slice(0,5);
+
 renderAll();
 </script>
 </body>
