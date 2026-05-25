@@ -246,7 +246,15 @@ tr:hover td{background:rgba(240,192,64,.025)}
         <div class="section-title">Tous les items</div>
         <div class="table-wrap"><div class="table-scroll">
           <table>
-            <thead><tr><th>Type</th><th>Item</th><th class="tr">Qté</th><th class="tr">Achat</th><th class="tr">Actuel</th><th class="tr">Gain</th><th class="tr">%</th></tr></thead>
+            <thead><tr>
+              <th onclick="sortItems('type')" style="cursor:pointer">Type <span id="sort-type">↕</span></th>
+              <th>Item</th>
+              <th class="tr" onclick="sortItems('qte')" style="cursor:pointer">Qté <span id="sort-qte">↕</span></th>
+              <th class="tr" onclick="sortItems('achat')" style="cursor:pointer">Achat <span id="sort-achat">↕</span></th>
+              <th class="tr" onclick="sortItems('actuel')" style="cursor:pointer">Actuel <span id="sort-actuel">↕</span></th>
+              <th class="tr" onclick="sortItems('gain')" style="cursor:pointer">Gain <span id="sort-gain">↕</span></th>
+              <th class="tr" onclick="sortItems('pct')" style="cursor:pointer">% <span id="sort-pct">↕</span></th>
+            </tr></thead>
             <tbody id="tbody-items"></tbody>
           </table>
         </div></div>
@@ -263,7 +271,7 @@ tr:hover td{background:rgba(240,192,64,.025)}
     <div id="compare-content">
       <div class="empty-state">
         <div class="e-icon">📊</div>
-        <p>Glissez les fichiers CSV de la Période 2<br>dans la barre d'import ci-dessus pour comparer.</p>
+        <p>Au moins 2 périodes sont nécessaires<br>pour afficher la comparaison.</p>
       </div>
     </div>
   </div>
@@ -275,20 +283,7 @@ tr:hover td{background:rgba(240,192,64,.025)}
         <div class="section-title">Historique des périodes</div>
         <div class="period-manager">
           <div class="period-list" id="period-list"></div>
-          <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
-            <div class="form-label" style="margin-bottom:10px">Enregistrer la période courante</div>
-            <div class="add-period-form">
-              <div class="form-group">
-                <span class="form-label">Nom de la période</span>
-                <input class="form-input" id="period-name-input" placeholder="ex: Juin 2025" />
-              </div>
-              <div class="form-group">
-                <span class="form-label">Date</span>
-                <input class="form-input" id="period-date-input" type="date" />
-              </div>
-              <button class="btn btn-gold" onclick="savePeriod()">+ Enregistrer</button>
-            </div>
-          </div>
+
         </div>
       </div>
       <div>
@@ -303,7 +298,7 @@ tr:hover td{background:rgba(240,192,64,.025)}
       </div>
     </div>
 
-    <div class="section-title">Top 10 performers entre les périodes</div>
+    <div class="section-title">Top 5 performers entre les périodes</div>
     <div class="top10-toggle">
       <button class="toggle-btn active" id="toggle-cartes" onclick="setTop10Mode('cartes')">🃏 Cartes</button>
       <button class="toggle-btn" id="toggle-items" onclick="setTop10Mode('items')">📦 Items scellés</button>
@@ -514,9 +509,9 @@ function renderPerfTables(cartes, items){
   }
 
   const sorted=[...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const first=sorted[0], last=sorted[sorted.length-1];
+  const first=sorted[0];
 
-  // CARTES
+  // CARTES — comparer première période vs données courantes
   const map1c=Object.fromEntries((first.cartes||[]).map(c=>[c._key,c]));
   const map2c=Object.fromEntries(cartes.map(c=>[c._key,c]));
   const allKeysc=new Set([...Object.keys(map1c),...Object.keys(map2c)]);
@@ -545,7 +540,7 @@ function renderPerfTables(cartes, items){
   document.getElementById('tbody-cartes-up').innerHTML=topCUp.length?topCUp.map((m,i)=>rowC(m,i,true)).join(''):noData;
   document.getElementById('tbody-cartes-down').innerHTML=topCDown.length?topCDown.map((m,i)=>rowC(m,i,false)).join(''):noData;
 
-  // ITEMS
+  // ITEMS — comparer première période vs données courantes
   const map1i=Object.fromEntries((first.items||[]).map(i=>[i._key,i]));
   const map2i=Object.fromEntries(items.map(i=>[i._key,i]));
   const allKeysi=new Set([...Object.keys(map1i),...Object.keys(map2i)]);
@@ -574,6 +569,47 @@ function renderPerfTables(cartes, items){
   document.getElementById('tbody-items-down').innerHTML=topIDown.length?topIDown.map((m,i)=>rowI(m,i,false)).join(''):noData;
 }
 
+
+/* ── SORT ITEMS ── */
+let _itemsData = [];
+let _sortCol = 'actuel';
+let _sortAsc = false;
+
+function sortItems(col){
+  if(_sortCol===col){ _sortAsc=!_sortAsc; }
+  else { _sortCol=col; _sortAsc=false; }
+  // Mettre à jour les icônes
+  ['type','qte','achat','actuel','gain','pct'].forEach(c=>{
+    const el=document.getElementById('sort-'+c);
+    if(el) el.textContent = c===col ? (_sortAsc?'↑':'↓') : '↕';
+  });
+  renderItemsTable();
+}
+
+function renderItemsTable(){
+  const sorted=[..._itemsData].sort((a,b)=>{
+    let va,vb;
+    if(_sortCol==='type'){va=a['Item']||'';vb=b['Item']||'';return _sortAsc?va.localeCompare(vb):vb.localeCompare(va);}
+    if(_sortCol==='qte'){va=a._qte;vb=b._qte;}
+    else if(_sortCol==='achat'){va=a._achat;vb=b._achat;}
+    else if(_sortCol==='actuel'){va=a._actuel;vb=b._actuel;}
+    else if(_sortCol==='gain'){va=a._gain;vb=b._gain;}
+    else if(_sortCol==='pct'){va=a._pct||0;vb=b._pct||0;}
+    else{va=a._actuel;vb=b._actuel;}
+    return _sortAsc?va-vb:vb-va;
+  });
+  document.getElementById('tbody-items').innerHTML=sorted.map(i=>`
+    <tr>
+      <td>${tagType(i['Item'])}</td>
+      <td><div class="td-name">${i['Série']}</div></td>
+      <td class="tr mono">${i._qte}</td>
+      <td class="tr mono">${i._achat>0?eur(i._achat):'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="tr mono" style="color:var(--gold)">${eur(i._actuel)}</td>
+      <td class="tr">${dHtml(i._gain)}</td>
+      <td class="tr mono">${i._pct!==null?`<span class="${i._pct>=0?'change-up':'change-down'}">${i._pct>=0?'+':''}${i._pct.toFixed(1)}%</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`).join('');
+}
+
 /* ── RENDER SCELLÉ ── */
 function renderScelle(items){
   const tv=items.reduce((s,i)=>s+i._actuel,0);
@@ -584,66 +620,109 @@ function renderScelle(items){
     {l:'Valeur totale',v:eur(tv),c:'gold'},{l:'Coût total',v:eur(ta),c:'blue'},
     {l:'Gain théorique',v:eur(tg),c:'green'},{l:'Rendement',v:gp!==null?pct(gp):'—',c:tg>=0?'green':'red'},
   ].map(k=>`<div class="stat-card c-${k.c}"><div class="stat-label">${k.l}</div><div class="stat-value c-${k.c}">${k.v}</div></div>`).join('');
-  document.getElementById('tbody-items').innerHTML=[...items].sort((a,b)=>b._actuel-a._actuel).map(i=>`
-    <tr>
-      <td>${tagType(i['Item'])}</td>
-      <td><div class="td-name">${i['Série']}</div></td>
-      <td class="tr mono">${i._qte}</td>
-      <td class="tr mono">${i._achat>0?eur(i._achat):'<span style="color:var(--muted)">—</span>'}</td>
-      <td class="tr mono" style="color:var(--gold)">${eur(i._actuel)}</td>
-      <td class="tr">${dHtml(i._gain)}</td>
-      <td class="tr mono">${i._pct!==null?`<span class="${i._pct>=0?'change-up':'change-down'}">${pct(i._pct)}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
-    </tr>`).join('');
+  _itemsData = items;
+  _sortCol = 'actuel'; _sortAsc = false;
+  renderItemsTable();
   const byType={};
   items.forEach(i=>{if(!byType[i['Item']])byType[i['Item']]={gain:0};byType[i['Item']].gain+=i._gain;});
   const ta2=Object.entries(byType).sort((a,b)=>b[1].gain-a[1].gain).filter(([,v])=>v.gain>0).map(([t,v])=>({t,...v}));
   document.getElementById('type-chart').innerHTML='<div>'+barHtml(ta2,it=>TYPE_C[it.t]||'gray',it=>it.gain,it=>it.t)+'</div>';
 }
 
-/* ── RENDER COMPARE ── */
-function renderCompare(c1,i1,c2,i2){
-  const s1=computeStats(c1,i1),s2=computeStats(c2,i2);
-  const map1=Object.fromEntries(c1.map(c=>[c._key,c]));
-  const map2=Object.fromEntries(c2.map(c=>[c._key,c]));
-  const allKeys=new Set([...Object.keys(map1),...Object.keys(map2)]);
-  const movers=[];
-  allKeys.forEach(k=>{const a=map1[k],b=map2[k];if(a&&b){const diff=b._actuel-a._actuel;if(Math.abs(diff)>.01)movers.push({nom:a['Nom'],serie:a['Série'],v1:a._actuel,v2:b._actuel,diff,pct:a._actuel>0?diff/a._actuel*100:0});}});
-  const topUp=[...movers].sort((a,b)=>b.diff-a.diff).slice(0,5);
-  const topDown=[...movers].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,5);
-  const newCards=[...allKeys].filter(k=>!map1[k]&&map2[k]).map(k=>map2[k]);
-  const goneCards=[...allKeys].filter(k=>map1[k]&&!map2[k]).map(k=>map1[k]);
-  const dCartes=s2.totalCartes-s1.totalCartes,dItems=s2.totalItems-s1.totalItems;
-  const dTotal=(s2.totalCartes+s2.totalItems)-(s1.totalCartes+s1.totalItems),dGain=s2.gainItems-s1.gainItems;
+/* ── RENDER COMPARE — auto avant-dernière vs dernière période ── */
+function renderCompare(){
+  if(!PERIODS||PERIODS.length<2){
+    document.getElementById('compare-content').innerHTML='<div class="empty-state"><div class="e-icon">📊</div><p>Au moins 2 périodes sont nécessaires<br>pour afficher la comparaison.</p></div>';
+    return;
+  }
+  const sorted=[...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const prev=sorted[sorted.length-2], curr=sorted[sorted.length-1];
+  const c1=prev.cartes||[], i1=prev.items||[];
+  const c2=curr.cartes||[], i2=curr.items||[];
+  const s1=computeStats(c1,i1), s2=computeStats(c2,i2);
+
+  // Cartes movers
+  const map1c=Object.fromEntries(c1.map(c=>[c._key,c]));
+  const map2c=Object.fromEntries(c2.map(c=>[c._key,c]));
+  const allKeysc=new Set([...Object.keys(map1c),...Object.keys(map2c)]);
+  const moversc=[];
+  allKeysc.forEach(k=>{const a=map1c[k],b=map2c[k];if(a&&b){const diff=b._actuel-a._actuel;if(Math.abs(diff)>.005)moversc.push({nom:a['Nom'],serie:a['Série'],etat:a['État'],v1:a._actuel,v2:b._actuel,diff,pct:a._actuel>0?diff/a._actuel*100:0});}});
+  const topCUp=[...moversc].sort((a,b)=>b.diff-a.diff).slice(0,5);
+  const topCDown=[...moversc].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,5);
+
+  // Items movers
+  const map1i=Object.fromEntries(i1.map(i=>[i._key,i]));
+  const map2i=Object.fromEntries(i2.map(i=>[i._key,i]));
+  const allKeysi=new Set([...Object.keys(map1i),...Object.keys(map2i)]);
+  const moversi=[];
+  allKeysi.forEach(k=>{const a=map1i[k],b=map2i[k];if(a&&b){const diff=b._actuel-a._actuel;if(Math.abs(diff)>.005)moversi.push({serie:a['Série'],type:a['Item'],v1:a._actuel,v2:b._actuel,diff,pct:a._actuel>0?diff/a._actuel*100:0});}});
+  const topIUp=[...moversi].sort((a,b)=>b.diff-a.diff).slice(0,5);
+  const topIDown=[...moversi].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,5);
+
+  const newCards=[...allKeysc].filter(k=>!map1c[k]&&map2c[k]).map(k=>map2c[k]);
+  const goneCards=[...allKeysc].filter(k=>map1c[k]&&!map2c[k]).map(k=>map1c[k]);
+  const dCartes=s2.totalCartes-s1.totalCartes, dItems=s2.totalItems-s1.totalItems;
+  const dTotal=(s2.totalCartes+s2.totalItems)-(s1.totalCartes+s1.totalItems), dGain=s2.gainItems-s1.gainItems;
+
+  const rowC=(m,i,up)=>`<tr>
+    <td class="rank">${i+1}</td>
+    <td><div class="td-name">${m.nom}</div><div class="td-sub">${m.serie} · ${tagEtat(m.etat)}</div></td>
+    <td class="tr mono">${eur(m.v1)}</td>
+    <td class="tr mono" style="color:${up?'var(--gold)':'var(--red)'}">${eur(m.v2)}</td>
+    <td class="tr ${up?'change-up':'change-down'}">${up?'+':''}${eur(m.diff)}</td>
+    <td class="tr"><span class="perf-badge ${up?'perf-pos':'perf-neg'}">${up?'+':''}${m.pct.toFixed(1)}%</span></td>
+  </tr>`;
+  const rowI=(m,i,up)=>`<tr>
+    <td class="rank">${i+1}</td>
+    <td><div class="td-name">${m.serie}</div><div class="td-sub">${tagType(m.type)}</div></td>
+    <td class="tr mono">${eur(m.v1)}</td>
+    <td class="tr mono" style="color:${up?'var(--gold)':'var(--red)'}">${eur(m.v2)}</td>
+    <td class="tr ${up?'change-up':'change-down'}">${up?'+':''}${eur(m.diff)}</td>
+    <td class="tr"><span class="perf-badge ${up?'perf-pos':'perf-neg'}">${up?'+':''}${m.pct.toFixed(1)}%</span></td>
+  </tr>`;
+  const noData5='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">Aucune variation</td></tr>';
+  const noData3='<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:16px">Aucune</td></tr>';
+
   document.getElementById('compare-content').innerHTML=`
     <div class="compare-header">
-      <div class="period-label"><div class="period-dot p1"></div><div class="period-text"><strong>Période 1</strong>Total : ${eur(s1.totalCartes+s1.totalItems)} · ${s1.nbCartes} cartes · ${s1.nbItems} items</div></div>
-      <div class="period-label"><div class="period-dot p2"></div><div class="period-text"><strong>Période 2</strong>Total : ${eur(s2.totalCartes+s2.totalItems)} · ${s2.nbCartes} cartes · ${s2.nbItems} items</div></div>
+      <div class="period-label"><div class="period-dot p1"></div><div class="period-text"><strong>${prev.name}</strong>${prev.date} · Total : ${eur(s1.totalCartes+s1.totalItems)}</div></div>
+      <div class="period-label"><div class="period-dot p2"></div><div class="period-text"><strong>${curr.name}</strong>${curr.date} · Total : ${eur(s2.totalCartes+s2.totalItems)}</div></div>
     </div>
     <div class="g4" style="margin-bottom:24px">
       ${[{l:'Variation cartes',v:dCartes},{l:'Variation scellé',v:dItems},{l:'Variation totale',v:dTotal},{l:'Variation gain scellé',v:dGain}]
-        .map(k=>`<div class="stat-card ${k.v>=0?'c-green':'c-red'}"><div class="stat-label">${k.l}</div><div class="stat-value ${k.v>=0?'c-green':'c-red'}">${k.v>=0?'+':''} ${eur(k.v)}</div></div>`).join('')}
+        .map(k=>`<div class="stat-card ${k.v>=0?'c-green':'c-red'}"><div class="stat-label">${k.l}</div><div class="stat-value ${k.v>=0?'c-green':'c-red'}">${k.v>=0?'+':''}${eur(k.v)}</div></div>`).join('')}
     </div>
+    <div class="section-title">🃏 Top 5 cartes</div>
     <div class="g2">
       <div>
-        <div class="section-title">📈 Plus fortes hausses</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes hausses</div>
         <div class="table-wrap"><div class="table-scroll"><table>
-          <thead><tr><th>Carte</th><th class="tr">P1</th><th class="tr">P2</th><th class="tr">Δ</th><th class="tr">%</th></tr></thead>
-          <tbody>${topUp.length?topUp.map(m=>`<tr>
-            <td><div class="td-name">${m.nom}</div><div class="td-sub">${m.serie}</div></td>
-            <td class="tr mono">${eur(m.v1)}</td><td class="tr mono">${eur(m.v2)}</td>
-            <td class="tr change-up">+${eur(m.diff)}</td><td class="tr change-up">+${m.pct.toFixed(1)}%</td>
-          </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune variation</td></tr>'}</tbody>
+          <thead><tr><th>#</th><th>Carte</th><th class="tr">${prev.name}</th><th class="tr">${curr.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+          <tbody>${topCUp.length?topCUp.map((m,i)=>rowC(m,i,true)).join(''):noData5}</tbody>
         </table></div></div>
       </div>
       <div>
-        <div class="section-title">📉 Plus fortes baisses</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes baisses</div>
         <div class="table-wrap"><div class="table-scroll"><table>
-          <thead><tr><th>Carte</th><th class="tr">P1</th><th class="tr">P2</th><th class="tr">Δ</th><th class="tr">%</th></tr></thead>
-          <tbody>${topDown.length?topDown.map(m=>`<tr>
-            <td><div class="td-name">${m.nom}</div><div class="td-sub">${m.serie}</div></td>
-            <td class="tr mono">${eur(m.v1)}</td><td class="tr mono">${eur(m.v2)}</td>
-            <td class="tr change-down">${eur(m.diff)}</td><td class="tr change-down">${m.pct.toFixed(1)}%</td>
-          </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune baisse</td></tr>'}</tbody>
+          <thead><tr><th>#</th><th>Carte</th><th class="tr">${prev.name}</th><th class="tr">${curr.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+          <tbody>${topCDown.length?topCDown.map((m,i)=>rowC(m,i,false)).join(''):noData5}</tbody>
+        </table></div></div>
+      </div>
+    </div>
+    <div class="section-title">📦 Top 5 items scellés</div>
+    <div class="g2">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes hausses</div>
+        <div class="table-wrap"><div class="table-scroll"><table>
+          <thead><tr><th>#</th><th>Item</th><th class="tr">${prev.name}</th><th class="tr">${curr.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+          <tbody>${topIUp.length?topIUp.map((m,i)=>rowI(m,i,true)).join(''):noData5}</tbody>
+        </table></div></div>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes baisses</div>
+        <div class="table-wrap"><div class="table-scroll"><table>
+          <thead><tr><th>#</th><th>Item</th><th class="tr">${prev.name}</th><th class="tr">${curr.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+          <tbody>${topIDown.length?topIDown.map((m,i)=>rowI(m,i,false)).join(''):noData5}</tbody>
         </table></div></div>
       </div>
     </div>
@@ -658,7 +737,7 @@ function renderCompare(c1,i1,c2,i2){
         </table></div></div></div>`:''}
       ${goneCards.length?`<div><div class="section-title">🔴 Cartes retirées (${goneCards.length})</div>
         <div class="table-wrap"><div class="table-scroll"><table>
-          <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur P1</th></tr></thead>
+          <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur</th></tr></thead>
           <tbody>${goneCards.slice(0,5).map(c=>`<tr>
             <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
             <td>${tagEtat(c['État'])}</td><td class="tr mono change-gone">${eur(c._actuel)}</td>
@@ -671,22 +750,7 @@ function renderCompare(c1,i1,c2,i2){
    ÉVOLUTION PANEL
 ══════════════════════════════════════════════════ */
 
-function savePeriod(){
-  const name=document.getElementById('period-name-input').value.trim();
-  const date=document.getElementById('period-date-input').value;
-  if(!name){alert('Donnez un nom à la période.');return;}
-  const c=DATA.p1.cartes, i=DATA.p1.items;
-  PERIODS.push({
-    id: Date.now(),
-    name, date: date||new Date().toISOString().slice(0,5),
-    cartes: c, items: i,
-    totalCartes: c.reduce((s,x)=>s+x._actuel,0),
-    totalItems:  i.reduce((s,x)=>s+x._actuel,0),
-  });
-  document.getElementById('period-name-input').value='';
-  renderPerfTables(c1, i1);
-  renderEvolution();
-}
+
 
 function deletePeriod(id){
   if(PERIODS.length<=1){alert('Gardez au moins une période.');return;}
@@ -897,8 +961,7 @@ function renderAll(){
   renderOverview(s1,s2);
   renderCartes(c1);
   renderScelle(i1);
-  if(c2&&i2){renderCompare(c1,i1,c2,i2);document.getElementById('period-badge').textContent='P1 → P2';}
-  else{document.getElementById('compare-content').innerHTML='<div class="empty-state"><div class="e-icon">📊</div><p>Glissez les fichiers CSV de la Période 2<br>dans la barre d\'import ci-dessus pour comparer.</p></div>';document.getElementById('period-badge').textContent='PÉRIODE 1';}
+  renderCompare();
   document.getElementById('footer-info').textContent=`${c1.length} cartes · ${i1.length} items · Total : ${(s1.totalCartes+s1.totalItems).toLocaleString('fr-FR',{minimumFractionDigits:2})} €`;
   renderEvolution();
 }
