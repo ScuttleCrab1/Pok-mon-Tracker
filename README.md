@@ -2,6 +2,10 @@
 
 Dashboard de suivi de ta collection Pokémon, mis à jour automatiquement via GitHub Actions.
 
+🌐 **Site internet : [https://scuttlecrab1.github.io/Pok-mon-Tracker/](https://scuttlecrab1.github.io/Pok-mon-Tracker/)**
+
+---
+
 ## 📁 Structure du projet
 
 ```
@@ -37,7 +41,7 @@ pokemon-tracker/
 
 ---
 
-## 📤 Mettre à jour la collection (utilisation normale)
+## 📤 Mettre à jour la collection
 
 C'est la seule chose à faire à chaque mise à jour :
 
@@ -68,9 +72,9 @@ Si tu veux forcer une régénération sans uploader de nouveaux CSV :
 
 | Onglet | Contenu |
 |--------|---------|
-| **Vue d'ensemble** | KPIs, Top 10 cartes, répartition par état/bloc |
-| **Cartes** | Tableau filtrable de toutes les cartes |
-| **Scellé** | Items scellés avec gains et rendements |
+| **Vue d'ensemble** | KPIs (total en premier), Top 10 cartes, répartition par état/bloc |
+| **Cartes** | Tableau filtrable + meilleures performances inter-périodes |
+| **Scellé** | Items scellés avec gains, rendements + meilleures performances |
 | **Comparaison P1→P2** | Différences entre deux périodes importées |
 | **📈 Évolution** | Graphiques multi-périodes + Top 10 performers |
 
