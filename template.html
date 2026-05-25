@@ -138,9 +138,98 @@ tr:hover td{background:rgba(240,192,64,.025)}
 .perf-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px}
 .perf-pos{background:rgba(46,204,138,.12);color:var(--green)}
 .perf-neg{background:rgba(240,72,90,.12);color:var(--red)}
+
+/* ── SCORE SANTÉ ── */
+.health-bar-wrap{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.health-score-row{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.health-score-num{font-family:'Bebas Neue',sans-serif;font-size:64px;line-height:1;flex-shrink:0}
+.health-score-num.s-great{color:var(--green)}.health-score-num.s-good{color:var(--gold)}.health-score-num.s-warn{color:var(--orange)}.health-score-num.s-bad{color:var(--red)}
+.health-score-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:6px}
+.health-score-desc{font-size:13px;color:var(--muted2);line-height:1.5}
+.health-bar-track{flex:1;min-width:200px;height:12px;background:var(--s2);border-radius:6px;overflow:hidden}
+.health-bar-fill{height:100%;border-radius:6px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.health-criteria{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.health-crit{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:11px;display:flex;align-items:center;gap:8px}
+.health-crit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── ALERTES ── */
+.alert-band{background:rgba(240,72,90,.06);border:1px solid rgba(240,72,90,.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:none}
+.alert-band.visible{display:block}
+.alert-band-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--red);margin-bottom:10px}
+.alert-list{display:flex;flex-direction:column;gap:6px}
+.alert-item{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted2)}
+.alert-item-name{font-weight:500;color:var(--text);flex:1}
+.alert-item-pct{font-family:'DM Mono',monospace;font-size:11px}
+
+/* ── MODAL CARTE ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--s1);border:1px solid var(--border2);border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--muted2);font-size:18px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1}
+.modal-close:hover{color:var(--red);border-color:var(--red)}
+.modal-inner{padding:28px}
+.modal-top{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px}
+.modal-img-wrap{width:180px;flex-shrink:0;border-radius:10px;overflow:hidden;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;min-height:240px}
+.modal-img-wrap img{width:100%;border-radius:10px}
+.modal-img-placeholder{color:var(--muted);font-size:40px;text-align:center}
+.modal-info{flex:1;min-width:200px}
+.modal-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--gold);line-height:1;margin-bottom:4px}
+.modal-serie{font-size:12px;color:var(--muted2);margin-bottom:16px}
+.modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.modal-stat{background:var(--s2);border-radius:8px;padding:10px 14px}
+.modal-stat-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
+.modal-stat-value{font-family:'Bebas Neue',sans-serif;font-size:22px}
+.modal-chart-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.modal-chart-wrap{background:var(--s2);border-radius:10px;padding:16px}
+.modal-chart-wrap canvas{max-height:180px}
+.modal-volatility{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-size:10px;margin-top:8px}
+.vol-low{background:rgba(46,204,138,.12);color:var(--green)}
+.vol-med{background:rgba(240,192,64,.12);color:var(--gold)}
+.vol-high{background:rgba(240,72,90,.12);color:var(--red)}
+
+/* ── VOLATILITÉ TABLEAU ── */
+.vol-dot{display:inline-block;width:8px;height:8px;border-radius:50%}
+
+/* ── MOBILE (iPhone Safari) ── */
+@media(max-width:640px){
+  .app-header{padding:14px 16px}
+  .logo h1{font-size:22px;letter-spacing:2px}
+  .logo span{display:none}
+  #dashboard{padding:16px}
+  .tabs{width:100%;overflow-x:auto;padding-bottom:2px}
+  .tab{font-size:11px;padding:6px 12px;white-space:nowrap}
+  .g4{grid-template-columns:repeat(2,1fr);gap:10px}
+  .g3,.g2{grid-template-columns:1fr;gap:10px}
+  .stat-value{font-size:26px}
+  .table-wrap{border-radius:8px}
+  td,th{padding:8px 10px;font-size:11px}
+  .td-name{font-size:12px}
+  .section-title{font-size:15px;letter-spacing:2px}
+  .health-score-num{font-size:48px}
+  .modal-box{border-radius:12px;max-height:95vh}
+  .modal-top{flex-direction:column}
+  .modal-img-wrap{width:100%;min-height:200px}
+  .app-footer{padding:14px 16px;font-size:9px}
+  .bar-lbl{width:110px;font-size:10px}
+  .hl-card{padding:14px}
+}
+@media(max-width:380px){
+  .g4{grid-template-columns:1fr}
+  .tab{font-size:10px;padding:5px 10px}
+}
+
 </style>
 </head>
 <body>
+
+
+<!-- MODAL DÉTAIL CARTE -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div class="modal-inner" id="modal-inner"></div>
+  </div>
+</div>
 
 <header class="app-header">
   <div class="logo">
@@ -166,6 +255,26 @@ tr:hover td{background:rgba(240,192,64,.025)}
   <!-- OVERVIEW -->
   <div class="panel active" id="panel-overview">
     <div class="section-title">Vue d'ensemble</div>
+    <div class="g2" style="margin-bottom:20px">
+      <div class="health-bar-wrap">
+        <div class="health-score-label">Score de santé</div>
+        <div class="health-score-row">
+          <div class="health-score-num" id="health-num">—</div>
+          <div style="flex:1">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="font-size:12px;color:var(--text);font-weight:500" id="health-label">—</span>
+              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)" id="health-sub">—</span>
+            </div>
+            <div class="health-bar-track"><div class="health-bar-fill" id="health-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+        <div class="health-criteria" id="health-criteria"></div>
+      </div>
+      <div class="alert-band" id="alert-band">
+        <div class="alert-band-title">⚠️ Alertes — Variations &gt; 5%</div>
+        <div class="alert-list" id="alert-list"></div>
+      </div>
+    </div>
     <div class="g4" id="kpi-grid"></div>
     <div class="g2">
       <div>
@@ -214,7 +323,7 @@ tr:hover td{background:rgba(240,192,64,.025)}
     </div>
     <div class="table-wrap"><div class="table-scroll">
       <table>
-        <thead><tr><th>#</th><th>Carte</th><th>État</th><th>Ver.</th><th>Lang.</th><th class="tr">Achat</th><th class="tr">Valeur</th><th class="tr">Gain</th></tr></thead>
+        <thead><tr><th>#</th><th>Carte</th><th>État</th><th>Ver.</th><th>Lang.</th><th class="tr">Achat</th><th class="tr">Valeur</th><th class="tr">Gain</th><th class="tr">Vol.</th></tr></thead>
         <tbody id="tbody-cartes"></tbody>
       </table>
     </div></div>
@@ -483,7 +592,9 @@ function filterCartes(){
   const f=_cartesData.filter(c=>(!q||c['Nom'].toLowerCase().includes(q)||c['Série'].toLowerCase().includes(q))&&(!fe||c['État']===fe)&&(!fb||c['Bloc']===fb));
   document.getElementById('tbody-cartes').innerHTML=f.map((c,i)=>{
     const gain=c._achat>0?c._actuel-c._achat:null;
-    return `<tr>
+    const cv = computeVolatility(c._key, 'carte');
+    const vcls = volClass(cv);
+    return `<tr style="cursor:pointer" onclick="openModal('${c._key.replace(/'/g,"\\'")}')">
       <td class="rank">${i+1}</td>
       <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']} · ${c['Numéro']}</div></td>
       <td>${tagEtat(c['État'])}</td>
@@ -492,6 +603,7 @@ function filterCartes(){
       <td class="tr mono">${c._achat>0?eur(c._achat):'<span style="color:var(--muted)">—</span>'}</td>
       <td class="tr mono" style="color:var(--gold)">${eur(c._actuel)}</td>
       <td class="tr">${gain!==null?dHtml(gain):'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="tr"><span class="vol-dot" style="background:${vcls==='vol-low'?'var(--green)':vcls==='vol-med'?'var(--gold)':'var(--red)'}"></span></td>
     </tr>`;
   }).join('');
 }
@@ -609,6 +721,247 @@ function renderItemsTable(){
       <td class="tr mono">${i._pct!==null?`<span class="${i._pct>=0?'change-up':'change-down'}">${i._pct>=0?'+':''}${i._pct.toFixed(1)}%</span>`:'<span style="color:var(--muted)">—</span>'}</td>
     </tr>`).join('');
 }
+
+
+/* ── SCORE DE SANTÉ ── */
+function computeHealth(cartes, items) {
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let score = 100;
+  const criteria = [];
+
+  // Critère 1 : évolution totale vs période initiale
+  if (sorted.length >= 2) {
+    const first = sorted[0];
+    const totalFirst = first.totalCartes + first.totalItems;
+    const totalNow   = cartes.reduce((s,c)=>s+c._actuel,0) + items.reduce((s,i)=>s+i._actuel,0);
+    const evoGlobal  = totalFirst > 0 ? (totalNow - totalFirst) / totalFirst * 100 : 0;
+    const pts = evoGlobal >= 10 ? 30 : evoGlobal >= 5 ? 20 : evoGlobal >= 0 ? 10 : evoGlobal >= -5 ? 0 : -15;
+    score += pts - 30;
+    score += 30; // base reset
+    criteria.push({ label:'Évolution globale', val: (evoGlobal>=0?'+':'')+evoGlobal.toFixed(1)+'%', ok: evoGlobal >= 0 });
+  }
+
+  // Critère 2 : gain scellé
+  const gainItems = items.reduce((s,i)=>s+i._gain,0);
+  const achatItems = items.filter(i=>i._achat>0).reduce((s,i)=>s+i._achat,0);
+  const rendement = achatItems > 0 ? gainItems / achatItems * 100 : 0;
+  const pts2 = rendement >= 20 ? 25 : rendement >= 10 ? 18 : rendement >= 0 ? 10 : -10;
+  score = score - 25 + pts2;
+  criteria.push({ label:'Rendement scellé', val:(rendement>=0?'+':'')+rendement.toFixed(1)+'%', ok: rendement >= 0 });
+
+  // Critère 3 : diversification blocs
+  const blocs = new Set(cartes.map(c=>c['Bloc'])).size;
+  const pts3 = blocs >= 6 ? 25 : blocs >= 4 ? 18 : blocs >= 2 ? 10 : 5;
+  score = score - 25 + pts3;
+  criteria.push({ label:'Diversification', val: blocs+' blocs', ok: blocs >= 4 });
+
+  // Critère 4 : qualité (% mint + excellent)
+  const topQuality = cartes.filter(c=>c['État']==='Mint'||c['État']==='Excellent').length;
+  const qualityPct = cartes.length > 0 ? topQuality/cartes.length*100 : 0;
+  const pts4 = qualityPct >= 70 ? 20 : qualityPct >= 50 ? 14 : qualityPct >= 30 ? 8 : 3;
+  score = score - 20 + pts4;
+  criteria.push({ label:'Qualité cartes', val: qualityPct.toFixed(0)+'% top état', ok: qualityPct >= 50 });
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  return { score, criteria };
+}
+
+function renderHealth(cartes, items) {
+  const { score, criteria } = computeHealth(cartes, items);
+  const cls = score >= 75 ? 's-great' : score >= 55 ? 's-good' : score >= 35 ? 's-warn' : 's-bad';
+  const label = score >= 75 ? 'Excellente' : score >= 55 ? 'Bonne' : score >= 35 ? 'À surveiller' : 'En difficulté';
+  const color = score >= 75 ? 'var(--green)' : score >= 55 ? 'var(--gold)' : score >= 35 ? 'var(--orange)' : 'var(--red)';
+
+  document.getElementById('health-num').textContent = score;
+  document.getElementById('health-num').className = 'health-score-num ' + cls;
+  document.getElementById('health-label').textContent = label;
+  document.getElementById('health-sub').textContent = score + '/100';
+  document.getElementById('health-bar').style.cssText = `width:${score}%;background:linear-gradient(90deg,${color}88,${color})`;
+  document.getElementById('health-criteria').innerHTML = criteria.map(c=>`
+    <div class="health-crit">
+      <div class="health-crit-dot" style="background:${c.ok?'var(--green)':'var(--red)'}"></div>
+      <span style="color:var(--muted)">${c.label}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:${c.ok?'var(--green)':'var(--red)'}">${c.val}</span>
+    </div>`).join('');
+}
+
+/* ── ALERTES > 5% ── */
+function renderAlerts(cartes, items) {
+  if (PERIODS.length < 2) return;
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const prev = sorted[sorted.length-2];
+  const alerts = [];
+
+  // Cartes
+  const map1 = Object.fromEntries((prev.cartes||[]).map(c=>[c._key,c]));
+  cartes.forEach(c => {
+    const old = map1[c._key];
+    if (!old || old._actuel === 0) return;
+    const pct = (c._actuel - old._actuel) / old._actuel * 100;
+    if (Math.abs(pct) >= 5) alerts.push({ name: c['Nom'], sub: c['Série'], pct, type:'carte' });
+  });
+
+  // Items
+  const map1i = Object.fromEntries((prev.items||[]).map(i=>[i._key,i]));
+  items.forEach(i => {
+    const old = map1i[i._key];
+    if (!old || old._actuel === 0) return;
+    const pct = (i._actuel - old._actuel) / old._actuel * 100;
+    if (Math.abs(pct) >= 5) alerts.push({ name: i['Série'], sub: i['Item'], pct, type:'item' });
+  });
+
+  alerts.sort((a,b) => Math.abs(b.pct) - Math.abs(a.pct));
+  const band = document.getElementById('alert-band');
+  const list = document.getElementById('alert-list');
+
+  if (alerts.length === 0) { band.classList.remove('visible'); return; }
+  band.classList.add('visible');
+  list.innerHTML = alerts.slice(0,8).map(a=>`
+    <div class="alert-item">
+      <span>${a.type==='carte'?'🃏':'📦'}</span>
+      <span class="alert-item-name">${a.name} <span style="color:var(--muted);font-size:10px">${a.sub}</span></span>
+      <span class="alert-item-pct ${a.pct>=0?'change-up':'change-down'}">${a.pct>=0?'+':''}${a.pct.toFixed(1)}%</span>
+    </div>`).join('');
+}
+
+/* ── VOLATILITÉ ── */
+function computeVolatility(key, type) {
+  if (PERIODS.length < 2) return null;
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const vals = sorted.map(p => {
+    const arr = type==='carte' ? (p.cartes||[]) : (p.items||[]);
+    const found = arr.find(x=>x._key===key);
+    return found ? found._actuel : null;
+  }).filter(v=>v!==null);
+  if (vals.length < 2) return null;
+  const mean = vals.reduce((s,v)=>s+v,0)/vals.length;
+  const variance = vals.reduce((s,v)=>s+(v-mean)**2,0)/vals.length;
+  return Math.sqrt(variance)/mean*100; // CV en %
+}
+
+function volClass(cv) {
+  if (cv === null) return '';
+  if (cv < 5)  return 'vol-low';
+  if (cv < 15) return 'vol-med';
+  return 'vol-high';
+}
+function volLabel(cv) {
+  if (cv === null) return '—';
+  if (cv < 5)  return '🟢 Stable';
+  if (cv < 15) return '🟡 Modérée';
+  return '🔴 Volatile';
+}
+
+/* ── MODAL ── */
+let _modalChart = null;
+
+function openModal(key) {
+  const c = _cartesData.find(x=>x._key===key);
+  if (!c) return;
+
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const histVals = sorted.map(p=>{
+    const found = (p.cartes||[]).find(x=>x._key===key);
+    return found ? found._actuel : null;
+  });
+  const histLabels = sorted.map(p=>p.name);
+
+  const cv = computeVolatility(key, 'carte');
+  const gain = c._achat > 0 ? c._actuel - c._achat : null;
+  const gainPct = c._achat > 0 ? (c._actuel - c._achat)/c._achat*100 : null;
+
+  document.getElementById('modal-inner').innerHTML = `
+    <div class="modal-top">
+      <div class="modal-img-wrap" id="modal-img-wrap">
+        <div class="modal-img-placeholder">🔍</div>
+      </div>
+      <div class="modal-info">
+        <div class="modal-name">${c['Nom']}</div>
+        <div class="modal-serie">${c['Série']} · ${c['Numéro']} · ${c['Bloc']||''}</div>
+        <div class="modal-stats">
+          <div class="modal-stat">
+            <div class="modal-stat-label">Valeur actuelle</div>
+            <div class="modal-stat-value" style="color:var(--gold)">${eur(c._actuel)}</div>
+          </div>
+          <div class="modal-stat">
+            <div class="modal-stat-label">Prix d'achat</div>
+            <div class="modal-stat-value" style="color:var(--muted2)">${c._achat>0?eur(c._achat):'—'}</div>
+          </div>
+          <div class="modal-stat">
+            <div class="modal-stat-label">Gain</div>
+            <div class="modal-stat-value" style="color:${gain>=0?'var(--green)':'var(--red)'}">${gain!==null?(gain>=0?'+':'')+eur(gain):'—'}</div>
+          </div>
+          <div class="modal-stat">
+            <div class="modal-stat-label">Rendement</div>
+            <div class="modal-stat-value" style="color:${gainPct>=0?'var(--green)':'var(--red)'}">${gainPct!==null?(gainPct>=0?'+':'')+gainPct.toFixed(1)+'%':'—'}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${tagEtat(c['État'])}
+          <span class="tag t-${c['Version']==='reverse'?'exc':'good'}">${c['Version']||'normal'}</span>
+          <span class="tag t-other">${c['Langue Carte']||'FR'}</span>
+          <span class="modal-volatility ${volClass(cv)}">${volLabel(cv)}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-chart-title">Évolution de la valeur</div>
+    <div class="modal-chart-wrap">
+      <canvas id="modal-chart"></canvas>
+    </div>`;
+
+  document.getElementById('modal-overlay').classList.add('open');
+
+  // Chart mini
+  if (_modalChart) _modalChart.destroy();
+  _modalChart = new Chart(document.getElementById('modal-chart'), {
+    type: 'line',
+    data: {
+      labels: histLabels,
+      datasets: [{
+        label: 'Valeur',
+        data: histVals,
+        borderColor: '#f0c040',
+        backgroundColor: 'rgba(240,192,64,.08)',
+        pointBackgroundColor: '#f0c040',
+        pointRadius: 4, fill: true, tension: .35, borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + eur(ctx.parsed.y) } }
+      },
+      scales: {
+        x: { ticks: { color:'#6b6b85', font:{family:'DM Mono',size:9} }, grid:{color:'rgba(255,255,255,.04)'} },
+        y: { ticks: { color:'#6b6b85', font:{family:'DM Mono',size:9}, callback:v=>eur(v) }, grid:{color:'rgba(255,255,255,.04)'} }
+      }
+    }
+  });
+
+  // Chercher image via API Pokémon TCG
+  const searchName = encodeURIComponent(c['Nom']);
+  fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${searchName}"&pageSize=5`)
+    .then(r=>r.json())
+    .then(data=>{
+      if (data.data && data.data.length > 0) {
+        const img = data.data[0].images?.large || data.data[0].images?.small;
+        if (img) {
+          document.getElementById('modal-img-wrap').innerHTML = `<img src="${img}" alt="${c['Nom']}" loading="lazy">`;
+        }
+      }
+    })
+    .catch(()=>{});
+}
+
+function closeModal(e) {
+  if (e.target.id === 'modal-overlay') closeModalBtn();
+}
+function closeModalBtn() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  if (_modalChart) { _modalChart.destroy(); _modalChart = null; }
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModalBtn(); });
 
 /* ── RENDER SCELLÉ ── */
 function renderScelle(items){
@@ -957,6 +1310,8 @@ function renderAll(){
   const c1=DATA.p1.cartes, i1=DATA.p1.items;
   const s1=computeStats(c1,i1);
   renderOverview(s1, null);
+  renderHealth(c1, i1);
+  renderAlerts(c1, i1);
   renderCartes(c1);
   renderScelle(i1);
   renderPerfTables(c1, i1);
