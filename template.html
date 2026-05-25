@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Collection Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07070d;--s1:#0f0f18;--s2:#16161f;--s3:#1e1e2a;
+  --border:#252533;--border2:#32324a;
+  --gold:#f0c040;--gold2:#c98a1a;
+  --green:#2ecc8a;--red:#f0485a;--blue:#4a9eff;--purple:#9b6dff;--orange:#f07840;
+  --text:#eeeef5;--muted:#6b6b85;--muted2:#9494aa;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(240,192,64,.04) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 90%,rgba(74,158,255,.04) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+.app-header{position:relative;z-index:10;padding:22px 36px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(7,7,13,.85);backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:baseline;gap:12px}
+.logo h1{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:4px;color:var(--gold);text-shadow:0 0 30px rgba(240,192,64,.4)}
+.logo span{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:10px}
+.p1-badge{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:5px 14px;border-radius:4px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000}
+
+.import-bar{position:relative;z-index:10;padding:14px 36px;border-bottom:1px solid var(--border);background:var(--s1);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.import-bar-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.dz-mini{position:relative;border:1.5px dashed var(--border2);border-radius:8px;padding:7px 14px;cursor:pointer;transition:all .2s;background:var(--s2);display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted2)}
+.dz-mini:hover,.dz-mini.dragover{border-color:var(--gold);color:var(--text)}
+.dz-mini.loaded{border-color:var(--green);border-style:solid;color:var(--green)}
+.dz-mini input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.dz-period-tag{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;padding:2px 7px;border-radius:3px}
+.dz-period-tag.p1{background:rgba(74,158,255,.15);color:var(--blue)}
+.dz-period-tag.p2{background:rgba(240,192,64,.15);color:var(--gold)}
+.btn{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;transition:all .15s}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#000}
+.btn-gold:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-gold:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-ghost{background:var(--s2);color:var(--muted2);border:1px solid var(--border2)}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted)}
+.import-hint{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+
+#dashboard{position:relative;z-index:10;padding:28px 36px}
+
+.tabs{display:flex;gap:4px;background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:4px;margin-bottom:24px;width:fit-content;flex-wrap:wrap}
+.tab{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;padding:7px 18px;border-radius:5px;cursor:pointer;color:var(--muted);transition:all .15s;border:none;background:transparent}
+.tab.active{background:var(--s3);color:var(--gold);box-shadow:0 1px 6px rgba(0,0,0,.4)}
+.panel{display:none}.panel.active{display:block}
+
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.g4,.g3,.g2{grid-template-columns:1fr}}
+
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.c-gold::before{background:linear-gradient(90deg,var(--gold2),var(--gold))}
+.stat-card.c-blue::before{background:linear-gradient(90deg,#1a6fcc,var(--blue))}
+.stat-card.c-green::before{background:linear-gradient(90deg,#0fa86a,var(--green))}
+.stat-card.c-red::before{background:linear-gradient(90deg,#b02030,var(--red))}
+.stat-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:8px}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;line-height:1}
+.stat-value.c-gold{color:var(--gold)}.stat-value.c-blue{color:var(--blue)}.stat-value.c-green{color:var(--green)}.stat-value.c-red{color:var(--red)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.stat-delta{font-family:'DM Mono',monospace;font-size:11px;margin-top:4px}
+.delta-pos{color:var(--green)}.delta-neg{color:var(--red)}
+
+.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);background:var(--s2);white-space:nowrap}
+td{padding:10px 14px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(240,192,64,.025)}
+.td-name{font-weight:500;font-size:13px}.td-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.rank{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted)}
+.mono{font-family:'DM Mono',monospace;font-size:11px}.tr{text-align:right}
+
+.tag{display:inline-block;padding:2px 7px;border-radius:20px;font-size:9px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.t-mint{background:rgba(46,204,138,.12);color:var(--green)}
+.t-exc{background:rgba(74,158,255,.12);color:var(--blue)}
+.t-vg{background:rgba(155,109,255,.12);color:var(--purple)}
+.t-good{background:rgba(240,192,64,.12);color:var(--gold)}
+.t-played{background:rgba(240,72,90,.12);color:var(--red)}
+.t-poor{background:rgba(240,72,90,.2);color:var(--red)}
+.t-etb{background:rgba(74,158,255,.12);color:var(--blue)}
+.t-coffret{background:rgba(240,192,64,.12);color:var(--gold)}
+.t-upc{background:rgba(155,109,255,.12);color:var(--purple)}
+.t-minitin{background:rgba(46,204,138,.12);color:var(--green)}
+.t-other{background:rgba(107,107,133,.12);color:var(--muted2)}
+
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-lbl{width:170px;font-size:11px;color:var(--muted2);text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:20px;background:var(--s2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-family:'DM Mono',monospace;color:#000;font-weight:500;min-width:4px}
+
+.hl-card{border-radius:12px;padding:18px 20px}
+.hl-gold{background:linear-gradient(135deg,rgba(240,192,64,.07),rgba(240,192,64,.01));border:1px solid rgba(240,192,64,.2)}
+.hl-green{background:linear-gradient(135deg,rgba(46,204,138,.07),rgba(46,204,138,.01));border:1px solid rgba(46,204,138,.2)}
+.hl-red{background:linear-gradient(135deg,rgba(240,72,90,.07),rgba(240,72,90,.01));border:1px solid rgba(240,72,90,.2)}
+.hl-blue{background:linear-gradient(135deg,rgba(74,158,255,.07),rgba(74,158,255,.01));border:1px solid rgba(74,158,255,.2)}
+.hl-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:8px}
+.hl-value{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;line-height:1.2}
+.hl-sub{font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.5}
+
+.compare-header{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.period-label{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.period-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.period-dot.p1{background:var(--blue)}.period-dot.p2{background:var(--gold)}
+.period-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted2)}
+.period-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:2px}
+.change-up{color:var(--green);font-family:'DM Mono',monospace;font-size:11px}
+.change-down{color:var(--red);font-family:'DM Mono',monospace;font-size:11px}
+.change-new{color:var(--purple);font-family:'DM Mono',monospace;font-size:11px}
+.change-gone{color:var(--muted);font-family:'DM Mono',monospace;font-size:11px}
+
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;margin-top:6px;display:flex;align-items:center;gap:12px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state .e-icon{font-size:48px;margin-bottom:16px;opacity:.4}
+.empty-state p{font-size:13px;line-height:1.6}
+
+.app-footer{position:relative;z-index:10;padding:18px 36px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;letter-spacing:1px}
+
+.filter-bar{margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap}
+.filter-input{background:var(--s1);border:1px solid var(--border2);border-radius:6px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;width:240px;outline:none}
+.filter-select{background:var(--s1);border:1px solid var(--border2);border-radius:6px;padding:8px 12px;color:var(--muted2);font-family:'DM Mono',monospace;font-size:11px;outline:none}
+
+/* ÉVOLUTION PANEL */
+.chart-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.chart-card canvas{max-height:320px}
+.period-manager{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.period-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.period-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--s2);border-radius:8px;border:1px solid var(--border)}
+.period-row-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.period-row-name{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;flex:1}
+.period-row-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)}
+.period-row-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
+.period-row-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 6px;border-radius:4px;transition:color .15s}
+.period-row-del:hover{color:var(--red)}
+.add-period-form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+.form-input{background:var(--s2);border:1px solid var(--border2);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;width:160px}
+.form-input:focus{border-color:var(--gold)}
+.top10-toggle{display:flex;gap:6px;margin-bottom:16px}
+.toggle-btn{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;padding:5px 14px;border-radius:5px;border:1px solid var(--border2);background:var(--s2);color:var(--muted);cursor:pointer;transition:all .15s}
+.toggle-btn.active{background:var(--s3);color:var(--gold);border-color:var(--gold)}
+.perf-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px}
+.perf-pos{background:rgba(46,204,138,.12);color:var(--green)}
+.perf-neg{background:rgba(240,72,90,.12);color:var(--red)}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo">
+    <h1>Pokémon Tracker</h1>
+    <span>Collection Dashboard</span>
+  </div>
+  <div class="header-right">
+    <span class="p1-badge" id="period-badge">PÉRIODE 1</span>
+    <button class="btn btn-ghost" onclick="resetImport()">↺ Reset</button>
+  </div>
+</header>
+
+<div class="import-bar">
+  <div class="import-bar-title">Importer :</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="dz-mini" id="dz-p1-cartes" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p1','cartes')">
+      <input type="file" accept=".csv" onchange="fileInput(event,'p1','cartes')">
+      <span class="dz-period-tag p1">P1</span> 🃏 Cartes <span id="name-p1-cartes"></span>
+    </div>
+    <div class="dz-mini" id="dz-p1-items" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p1','items')">
+      <input type="file" accept=".csv" onchange="fileInput(event,'p1','items')">
+      <span class="dz-period-tag p1">P1</span> 📦 Scellé <span id="name-p1-items"></span>
+    </div>
+    <div class="dz-mini" id="dz-p2-cartes" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p2','cartes')">
+      <input type="file" accept=".csv" onchange="fileInput(event,'p2','cartes')">
+      <span class="dz-period-tag p2">P2</span> 🃏 Cartes <span id="name-p2-cartes"></span>
+    </div>
+    <div class="dz-mini" id="dz-p2-items" ondragover="dzDrag(event,this)" ondragleave="dzLeave(this)" ondrop="dzDrop(event,'p2','items')">
+      <input type="file" accept=".csv" onchange="fileInput(event,'p2','items')">
+      <span class="dz-period-tag p2">P2</span> 📦 Scellé <span id="name-p2-items"></span>
+    </div>
+  </div>
+  <button class="btn btn-gold" id="btn-apply" onclick="applyImport()" disabled>Appliquer →</button>
+  <span class="import-hint" id="import-hint">Glissez vos CSV pour mettre à jour ou comparer</span>
+</div>
+
+<main id="dashboard">
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('overview')">Vue d'ensemble</button>
+    <button class="tab" onclick="setTab('cartes')">Cartes</button>
+    <button class="tab" onclick="setTab('scelle')">Scellé</button>
+    <button class="tab" onclick="setTab('compare')">Comparaison P1→P2</button>
+    <button class="tab" onclick="setTab('evolution')">📈 Évolution</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="panel active" id="panel-overview">
+    <div class="section-title">Vue d'ensemble</div>
+    <div class="g4" id="kpi-grid"></div>
+    <div class="g2">
+      <div>
+        <div class="section-title">Top 10 cartes</div>
+        <div class="table-wrap"><div class="table-scroll"><table id="tbl-top-cartes"></table></div></div>
+      </div>
+      <div>
+        <div class="section-title">Répartition par état</div>
+        <div class="table-wrap" style="padding:20px" id="etat-chart"></div>
+        <div class="section-title" style="margin-top:16px">Valeur par bloc</div>
+        <div class="table-wrap" style="padding:20px" id="bloc-chart"></div>
+      </div>
+    </div>
+    <div class="section-title">Points d'attention</div>
+    <div class="g3" id="highlights"></div>
+  </div>
+
+  <!-- CARTES -->
+  <div class="panel" id="panel-cartes">
+    <div class="section-title">Toutes les cartes</div>
+    <div class="filter-bar">
+      <input class="filter-input" id="search-cartes" type="text" placeholder="Rechercher…" oninput="filterCartes()">
+      <select class="filter-select" id="filter-etat" onchange="filterCartes()">
+        <option value="">Tous les états</option>
+        <option>Mint</option><option>Excellent</option><option>Very Good</option>
+        <option>Good</option><option>Played</option><option>Poor</option>
+      </select>
+      <select class="filter-select" id="filter-bloc" onchange="filterCartes()"><option value="">Tous les blocs</option></select>
+    </div>
+    <div class="table-wrap"><div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>Carte</th><th>État</th><th>Ver.</th><th>Lang.</th><th class="tr">Achat</th><th class="tr">Valeur</th><th class="tr">Gain</th></tr></thead>
+        <tbody id="tbody-cartes"></tbody>
+      </table>
+    </div></div>
+  </div>
+
+  <!-- SCELLÉ -->
+  <div class="panel" id="panel-scelle">
+    <div class="section-title">Items scellés</div>
+    <div class="g4" id="scelle-kpis"></div>
+    <div class="g2">
+      <div>
+        <div class="section-title">Tous les items</div>
+        <div class="table-wrap"><div class="table-scroll">
+          <table>
+            <thead><tr><th>Type</th><th>Item</th><th class="tr">Qté</th><th class="tr">Achat</th><th class="tr">Actuel</th><th class="tr">Gain</th><th class="tr">%</th></tr></thead>
+            <tbody id="tbody-items"></tbody>
+          </table>
+        </div></div>
+      </div>
+      <div>
+        <div class="section-title">Gain par type</div>
+        <div class="table-wrap" style="padding:20px" id="type-chart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="panel" id="panel-compare">
+    <div id="compare-content">
+      <div class="empty-state">
+        <div class="e-icon">📊</div>
+        <p>Glissez les fichiers CSV de la Période 2<br>dans la barre d'import ci-dessus pour comparer.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉVOLUTION -->
+  <div class="panel" id="panel-evolution">
+    <div class="g2">
+      <div>
+        <div class="section-title">Historique des périodes</div>
+        <div class="period-manager">
+          <div class="period-list" id="period-list"></div>
+          <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+            <div class="form-label" style="margin-bottom:10px">Enregistrer la période courante</div>
+            <div class="add-period-form">
+              <div class="form-group">
+                <span class="form-label">Nom de la période</span>
+                <input class="form-input" id="period-name-input" placeholder="ex: Juin 2025" />
+              </div>
+              <div class="form-group">
+                <span class="form-label">Date</span>
+                <input class="form-input" id="period-date-input" type="date" />
+              </div>
+              <button class="btn btn-gold" onclick="savePeriod()">+ Enregistrer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Évolution de la valeur totale</div>
+        <div class="chart-card">
+          <canvas id="chart-evolution"></canvas>
+        </div>
+        <div class="section-title">Répartition cartes / scellé</div>
+        <div class="chart-card">
+          <canvas id="chart-split"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Top 10 performers entre les périodes</div>
+    <div class="top10-toggle">
+      <button class="toggle-btn active" id="toggle-cartes" onclick="setTop10Mode('cartes')">🃏 Cartes</button>
+      <button class="toggle-btn" id="toggle-items" onclick="setTop10Mode('items')">📦 Items scellés</button>
+    </div>
+    <div id="top10-content">
+      <div class="empty-state">
+        <div class="e-icon">🏆</div>
+        <p>Enregistrez au moins 2 périodes<br>pour voir les meilleurs performers.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="app-footer">
+  POKÉMON COLLECTION TRACKER &nbsp;|&nbsp; <span id="footer-info"></span> &nbsp;|&nbsp; Généré le __GEN_DATE__
+</footer>
+
+<script>
+/* ── SEED DATA ── */
+const SEED_CARTES = __SEED_CARTES__;
+const SEED_ITEMS  = __SEED_ITEMS__;
+
+const DATA = {
+  p1: { cartes: SEED_CARTES, items: SEED_ITEMS },
+  p2: { cartes: null, items: null }
+};
+
+/* ── PERIODS STORE (localStorage-free: in-memory) ── */
+const SEED_PERIODS = __SEED_PERIODS__;
+let PERIODS = SEED_PERIODS.length > 0 ? SEED_PERIODS : [
+  {
+    id: 1,
+    name: 'Période 1',
+    date: '2025-05-25',
+    cartes: SEED_CARTES,
+    items: SEED_ITEMS,
+    totalCartes: SEED_CARTES.reduce((s,c)=>s+c._actuel,0),
+    totalItems: SEED_ITEMS.reduce((s,i)=>s+i._actuel,0),
+  }
+];
+let top10Mode = 'cartes';
+let chartEvol = null, chartSplit = null;
+
+/* ── PARSE ── */
+function parseNum(s){ return parseFloat(String(s||0).replace(/[€\s]/g,'').replace(',','.')) || 0; }
+function parseCartes(csv){
+  const lines=csv.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim());
+  return lines.slice(1).map(line=>{
+    const cols=[]; let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){inQ=!inQ;}
+      else if(line[i]===','&&!inQ){cols.push(cur);cur='';}
+      else cur+=line[i];
+    }
+    cols.push(cur);
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(cols[i]||'').trim());
+    obj._achat=parseNum(obj['Prix Achat']);
+    obj._actuel=parseNum(obj['Prix Actuel']);
+    obj._gain=obj._achat>0?obj._actuel-obj._achat:null;
+    obj._key=`${obj['Nom']}|${obj['Numéro']}|${obj['Série']}|${obj['État']}|${obj['Version']}`;
+    return obj;
+  }).filter(r=>r['Nom']);
+}
+function parseItems(csv){
+  const lines=csv.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim());
+  return lines.slice(1).map(line=>{
+    const cols=[]; let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){inQ=!inQ;}
+      else if(line[i]===','&&!inQ){cols.push(cur);cur='';}
+      else cur+=line[i];
+    }
+    cols.push(cur);
+    const obj={};
+    headers.forEach((h,i)=>obj[h]=(cols[i]||'').trim());
+    obj._qte=parseInt(obj['Quantité'])||1;
+    obj._achat=parseNum(obj['Prix Achat']);
+    obj._actuel=parseNum(obj['Prix Actuel']);
+    obj._gain=parseNum(obj['Gain Théorique']);
+    obj._pct=obj._achat>0?(obj._gain/obj._achat*100):null;
+    obj._key=`${obj['Item']}|${obj['Série']}`;
+    return obj;
+  }).filter(r=>r['Série']);
+}
+
+/* ── FILE LOADING ── */
+const _pending={p1:{cartes:null,items:null},p2:{cartes:null,items:null}};
+function loadFile(file,period,type){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const parsed=type==='cartes'?parseCartes(e.target.result):parseItems(e.target.result);
+      _pending[period][type]=parsed;
+      document.getElementById(`dz-${period}-${type}`).classList.add('loaded');
+      document.getElementById(`name-${period}-${type}`).textContent=' ✓';
+      updateImportState();
+    }catch(err){alert('Erreur : '+err.message);}
+  };
+  reader.readAsText(file,'utf-8');
+}
+function fileInput(e,p,t){if(e.target.files[0])loadFile(e.target.files[0],p,t);}
+function dzDrag(e,el){e.preventDefault();el.classList.add('dragover');}
+function dzLeave(el){el.classList.remove('dragover');}
+function dzDrop(e,p,t){e.preventDefault();document.getElementById(`dz-${p}-${t}`).classList.remove('dragover');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0],p,t);}
+function updateImportState(){
+  const p1ok=_pending.p1.cartes&&_pending.p1.items;
+  const p2ok=_pending.p2.cartes&&_pending.p2.items;
+  document.getElementById('btn-apply').disabled=!(p1ok||p2ok);
+  document.getElementById('import-hint').textContent=
+    p1ok&&p2ok?'✓ P1 + P2 prêtes — comparaison disponible !':
+    p1ok?'✓ P1 prête — ajoutez P2 pour comparer':
+    p2ok?'✓ P2 prête':
+    'Glissez vos CSV pour mettre à jour ou comparer';
+}
+function applyImport(){
+  if(_pending.p1.cartes)DATA.p1.cartes=_pending.p1.cartes;
+  if(_pending.p1.items)DATA.p1.items=_pending.p1.items;
+  if(_pending.p2.cartes)DATA.p2.cartes=_pending.p2.cartes;
+  if(_pending.p2.items)DATA.p2.items=_pending.p2.items;
+  renderAll();
+}
+function resetImport(){
+  ['p1','p2'].forEach(p=>['cartes','items'].forEach(t=>{
+    _pending[p][t]=null;
+    document.getElementById(`dz-${p}-${t}`).classList.remove('loaded');
+    document.getElementById(`name-${p}-${t}`).textContent='';
+  }));
+  DATA.p2.cartes=null;DATA.p2.items=null;
+  document.getElementById('btn-apply').disabled=true;
+  document.getElementById('period-badge').textContent='PÉRIODE 1';
+  renderAll();
+}
+
+/* ── HELPERS ── */
+function eur(n){return(n||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+function pct(n){return(n>=0?'+':'')+n.toFixed(1)+'%';}
+function tagEtat(e){const m={Mint:'mint',Excellent:'exc','Very Good':'vg',Good:'good',Played:'played',Poor:'poor'};return `<span class="tag t-${m[e]||'good'}">${e}</span>`;}
+function tagType(t){const m={etb:'etb',coffret:'coffret',upc:'upc',mini_tin:'minitin'};return `<span class="tag t-${m[t]||'other'}">${t}</span>`;}
+function dHtml(v){if(v===null||v===undefined)return '<span style="color:var(--muted)">—</span>';if(v>0)return `<span class="change-up">+${eur(v)}</span>`;if(v<0)return `<span class="change-down">${eur(v)}</span>`;return '<span style="color:var(--muted)">0,00 €</span>';}
+function barHtml(items,colorFn,valFn,lblFn){
+  const max=Math.max(...items.map(valFn),.01);
+  return items.map(it=>{
+    const v=valFn(it),w=Math.max(Math.round(v/max*100),2);
+    return `<div class="bar-row"><div class="bar-lbl">${lblFn(it)}</div><div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${colorFn(it)}">${eur(v)}</div></div></div>`;
+  }).join('');
+}
+const BLOC_C={'Appel des Legendes':'linear-gradient(90deg,#c98a1a,#f0c040)','Bloc Ex':'linear-gradient(90deg,#1a6fcc,#4a9eff)','Ecarlate et Violet':'linear-gradient(90deg,#6040cc,#9b6dff)','Soleil et Lune':'linear-gradient(90deg,#b02030,#f0485a)','Mega-Evolution':'linear-gradient(90deg,#0f8a5a,#2ecc8a)','Wizards':'linear-gradient(90deg,#b45309,#f59e0b)','Heartgold Soulsilver':'linear-gradient(90deg,#b06020,#f07840)'};
+const TYPE_C={etb:'linear-gradient(90deg,#c98a1a,#f0c040)',coffret:'linear-gradient(90deg,#0f8a5a,#2ecc8a)',mini_tin:'linear-gradient(90deg,#1a6fcc,#4a9eff)',upc:'linear-gradient(90deg,#6040cc,#9b6dff)',bundle:'linear-gradient(90deg,#b45309,#f59e0b)',tripack:'rgba(107,107,133,.5)'};
+const PERIOD_COLORS=['#4a9eff','#f0c040','#2ecc8a','#9b6dff','#f07840','#f0485a','#50d0d0'];
+
+/* ── COMPUTE ── */
+function computeStats(cartes,items){
+  const totalCartes=cartes.reduce((s,c)=>s+c._actuel,0);
+  const totalItems=items.reduce((s,i)=>s+i._actuel,0);
+  const gainItems=items.reduce((s,i)=>s+i._gain,0);
+  const etats={},blocs={},types={};
+  cartes.forEach(c=>{
+    if(!etats[c['État']])etats[c['État']]={count:0,val:0};
+    etats[c['État']].count++;etats[c['État']].val+=c._actuel;
+    if(!blocs[c['Bloc']])blocs[c['Bloc']]={count:0,val:0};
+    blocs[c['Bloc']].count++;blocs[c['Bloc']].val+=c._actuel;
+  });
+  items.forEach(i=>{if(!types[i['Item']])types[i['Item']]={gain:0,val:0};types[i['Item']].gain+=i._gain;types[i['Item']].val+=i._actuel;});
+  const top10=[...cartes].sort((a,b)=>b._actuel-a._actuel).slice(0,10);
+  const worstItem=[...items].filter(i=>i._achat>0).sort((a,b)=>a._gain-b._gain)[0];
+  const bestPct=[...items].filter(i=>i._achat>0&&i._pct!==null).sort((a,b)=>b._pct-a._pct)[0];
+  return{totalCartes,totalItems,gainItems,etats,blocs,types,top10,worstItem,bestPct,nbCartes:cartes.length,nbItems:items.length};
+}
+
+/* ── RENDER OVERVIEW ── */
+function renderOverview(s1,s2){
+  const hasP2=!!s2;
+  const kpis=[
+    {l:'Valeur cartes',v:eur(s1.totalCartes),c:'gold',sub:`${s1.nbCartes} cartes`,d:hasP2?s2.totalCartes-s1.totalCartes:null},
+    {l:'Valeur scellé',v:eur(s1.totalItems),c:'blue',sub:`${s1.nbItems} items`,d:hasP2?s2.totalItems-s1.totalItems:null},
+    {l:'Total collection',v:eur(s1.totalCartes+s1.totalItems),c:'gold',sub:'cartes + scellé',d:hasP2?(s2.totalCartes+s2.totalItems)-(s1.totalCartes+s1.totalItems):null},
+    {l:'Gain scellé',v:eur(s1.gainItems),c:'green',sub:'sur achats renseignés',d:hasP2?s2.gainItems-s1.gainItems:null},
+  ];
+  document.getElementById('kpi-grid').innerHTML=kpis.map(k=>`
+    <div class="stat-card c-${k.c}">
+      <div class="stat-label">${k.l}</div>
+      <div class="stat-value c-${k.c}">${k.v}</div>
+      <div class="stat-sub">${k.sub}</div>
+      ${k.d!==null?`<div class="stat-delta ${k.d>=0?'delta-pos':'delta-neg'}">${k.d>=0?'↑':'↓'} ${eur(Math.abs(k.d))} vs P1</div>`:''}
+    </div>`).join('');
+  document.getElementById('tbl-top-cartes').innerHTML=`
+    <thead><tr><th>#</th><th>Carte</th><th>État</th><th class="tr">Valeur</th></tr></thead>
+    <tbody>${s1.top10.map((c,i)=>`<tr>
+      <td class="rank">${i+1}</td>
+      <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']} · ${c['Numéro']}</div></td>
+      <td>${tagEtat(c['État'])}</td>
+      <td class="tr mono" style="color:var(--gold)">${eur(c._actuel)}</td>
+    </tr>`).join('')}</tbody>`;
+  const etatOrder=['Mint','Excellent','Very Good','Good','Played','Poor'];
+  const etatsArr=etatOrder.filter(e=>s1.etats[e]).map(e=>({e,...s1.etats[e]}));
+  const etatC={Mint:'linear-gradient(90deg,#0f8a5a,#2ecc8a)',Excellent:'linear-gradient(90deg,#1a6fcc,#4a9eff)','Very Good':'linear-gradient(90deg,#6040cc,#9b6dff)',Good:'linear-gradient(90deg,#c98a1a,#f0c040)',Played:'linear-gradient(90deg,#b02030,#f0485a)',Poor:'rgba(240,72,90,.5)'};
+  document.getElementById('etat-chart').innerHTML='<div>'+barHtml(etatsArr,it=>etatC[it.e]||'gray',it=>it.val,it=>`${it.e} (${it.count})`)+'</div>';
+  const blocsArr=Object.entries(s1.blocs).sort((a,b)=>b[1].val-a[1].val).map(([b,v])=>({b,...v}));
+  document.getElementById('bloc-chart').innerHTML='<div>'+barHtml(blocsArr,it=>BLOC_C[it.b]||'rgba(107,107,133,.5)',it=>it.val,it=>`${it.b} (${it.count})`)+'</div>';
+  const cardTop=s1.top10[0];
+  const hl=[
+    {cls:'hl-blue',l:'💎 Carte la plus précieuse',v:cardTop['Nom'],s:`${eur(cardTop._actuel)} · ${cardTop['Série']} · ${cardTop['État']}`},
+    s1.bestPct?{cls:'hl-green',l:'🏆 Meilleur rendement scellé',v:s1.bestPct['Série'],s:`Achat ${eur(s1.bestPct._achat)} → ${eur(s1.bestPct._actuel)}<br><span style="color:var(--green)">+${s1.bestPct._gain.toFixed(2)} € (${pct(s1.bestPct._pct)})</span>`}:null,
+    s1.worstItem?{cls:'hl-red',l:'⚠️ Item en perte',v:s1.worstItem['Série'],s:`Achat ${eur(s1.worstItem._achat)} → ${eur(s1.worstItem._actuel)}<br><span style="color:var(--red)">${eur(s1.worstItem._gain)} (${pct(s1.worstItem._pct)})</span>`}:null,
+  ].filter(Boolean);
+  document.getElementById('highlights').innerHTML=hl.map(h=>`
+    <div class="hl-card ${h.cls}"><div class="hl-label">${h.l}</div><div class="hl-value">${h.v}</div><div class="hl-sub">${h.s}</div></div>`).join('');
+}
+
+/* ── RENDER CARTES ── */
+let _cartesData=[];
+function renderCartes(cartes){
+  _cartesData=[...cartes].sort((a,b)=>b._actuel-a._actuel);
+  const blocs=[...new Set(cartes.map(c=>c['Bloc']))].sort();
+  const sel=document.getElementById('filter-bloc');
+  sel.innerHTML='<option value="">Tous les blocs</option>'+blocs.map(b=>`<option>${b}</option>`).join('');
+  filterCartes();
+}
+function filterCartes(){
+  const q=document.getElementById('search-cartes').value.toLowerCase();
+  const fe=document.getElementById('filter-etat').value;
+  const fb=document.getElementById('filter-bloc').value;
+  const f=_cartesData.filter(c=>(!q||c['Nom'].toLowerCase().includes(q)||c['Série'].toLowerCase().includes(q))&&(!fe||c['État']===fe)&&(!fb||c['Bloc']===fb));
+  document.getElementById('tbody-cartes').innerHTML=f.map((c,i)=>{
+    const gain=c._achat>0?c._actuel-c._achat:null;
+    return `<tr>
+      <td class="rank">${i+1}</td>
+      <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']} · ${c['Numéro']}</div></td>
+      <td>${tagEtat(c['État'])}</td>
+      <td><span style="font-size:10px;color:var(--muted)">${c['Version']||''}</span></td>
+      <td><span style="font-size:10px;color:var(--muted)">${c['Langue Carte']||''}</span></td>
+      <td class="tr mono">${c._achat>0?eur(c._achat):'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="tr mono" style="color:var(--gold)">${eur(c._actuel)}</td>
+      <td class="tr">${gain!==null?dHtml(gain):'<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── RENDER SCELLÉ ── */
+function renderScelle(items){
+  const tv=items.reduce((s,i)=>s+i._actuel,0);
+  const ta=items.filter(i=>i._achat>0).reduce((s,i)=>s+i._achat,0);
+  const tg=items.reduce((s,i)=>s+i._gain,0);
+  const gp=ta>0?tg/ta*100:null;
+  document.getElementById('scelle-kpis').innerHTML=[
+    {l:'Valeur totale',v:eur(tv),c:'gold'},{l:'Coût total',v:eur(ta),c:'blue'},
+    {l:'Gain théorique',v:eur(tg),c:'green'},{l:'Rendement',v:gp!==null?pct(gp):'—',c:tg>=0?'green':'red'},
+  ].map(k=>`<div class="stat-card c-${k.c}"><div class="stat-label">${k.l}</div><div class="stat-value c-${k.c}">${k.v}</div></div>`).join('');
+  document.getElementById('tbody-items').innerHTML=[...items].sort((a,b)=>b._actuel-a._actuel).map(i=>`
+    <tr>
+      <td>${tagType(i['Item'])}</td>
+      <td><div class="td-name">${i['Série']}</div></td>
+      <td class="tr mono">${i._qte}</td>
+      <td class="tr mono">${i._achat>0?eur(i._achat):'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="tr mono" style="color:var(--gold)">${eur(i._actuel)}</td>
+      <td class="tr">${dHtml(i._gain)}</td>
+      <td class="tr mono">${i._pct!==null?`<span class="${i._pct>=0?'change-up':'change-down'}">${pct(i._pct)}</span>`:'<span style="color:var(--muted)">—</span>'}</td>
+    </tr>`).join('');
+  const byType={};
+  items.forEach(i=>{if(!byType[i['Item']])byType[i['Item']]={gain:0};byType[i['Item']].gain+=i._gain;});
+  const ta2=Object.entries(byType).sort((a,b)=>b[1].gain-a[1].gain).filter(([,v])=>v.gain>0).map(([t,v])=>({t,...v}));
+  document.getElementById('type-chart').innerHTML='<div>'+barHtml(ta2,it=>TYPE_C[it.t]||'gray',it=>it.gain,it=>it.t)+'</div>';
+}
+
+/* ── RENDER COMPARE ── */
+function renderCompare(c1,i1,c2,i2){
+  const s1=computeStats(c1,i1),s2=computeStats(c2,i2);
+  const map1=Object.fromEntries(c1.map(c=>[c._key,c]));
+  const map2=Object.fromEntries(c2.map(c=>[c._key,c]));
+  const allKeys=new Set([...Object.keys(map1),...Object.keys(map2)]);
+  const movers=[];
+  allKeys.forEach(k=>{const a=map1[k],b=map2[k];if(a&&b){const diff=b._actuel-a._actuel;if(Math.abs(diff)>.01)movers.push({nom:a['Nom'],serie:a['Série'],v1:a._actuel,v2:b._actuel,diff,pct:a._actuel>0?diff/a._actuel*100:0});}});
+  const topUp=[...movers].sort((a,b)=>b.diff-a.diff).slice(0,5);
+  const topDown=[...movers].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,5);
+  const newCards=[...allKeys].filter(k=>!map1[k]&&map2[k]).map(k=>map2[k]);
+  const goneCards=[...allKeys].filter(k=>map1[k]&&!map2[k]).map(k=>map1[k]);
+  const dCartes=s2.totalCartes-s1.totalCartes,dItems=s2.totalItems-s1.totalItems;
+  const dTotal=(s2.totalCartes+s2.totalItems)-(s1.totalCartes+s1.totalItems),dGain=s2.gainItems-s1.gainItems;
+  document.getElementById('compare-content').innerHTML=`
+    <div class="compare-header">
+      <div class="period-label"><div class="period-dot p1"></div><div class="period-text"><strong>Période 1</strong>Total : ${eur(s1.totalCartes+s1.totalItems)} · ${s1.nbCartes} cartes · ${s1.nbItems} items</div></div>
+      <div class="period-label"><div class="period-dot p2"></div><div class="period-text"><strong>Période 2</strong>Total : ${eur(s2.totalCartes+s2.totalItems)} · ${s2.nbCartes} cartes · ${s2.nbItems} items</div></div>
+    </div>
+    <div class="g4" style="margin-bottom:24px">
+      ${[{l:'Variation cartes',v:dCartes},{l:'Variation scellé',v:dItems},{l:'Variation totale',v:dTotal},{l:'Variation gain scellé',v:dGain}]
+        .map(k=>`<div class="stat-card ${k.v>=0?'c-green':'c-red'}"><div class="stat-label">${k.l}</div><div class="stat-value ${k.v>=0?'c-green':'c-red'}">${k.v>=0?'+':''} ${eur(k.v)}</div></div>`).join('')}
+    </div>
+    <div class="g2">
+      <div>
+        <div class="section-title">📈 Plus fortes hausses</div>
+        <div class="table-wrap"><div class="table-scroll"><table>
+          <thead><tr><th>Carte</th><th class="tr">P1</th><th class="tr">P2</th><th class="tr">Δ</th><th class="tr">%</th></tr></thead>
+          <tbody>${topUp.length?topUp.map(m=>`<tr>
+            <td><div class="td-name">${m.nom}</div><div class="td-sub">${m.serie}</div></td>
+            <td class="tr mono">${eur(m.v1)}</td><td class="tr mono">${eur(m.v2)}</td>
+            <td class="tr change-up">+${eur(m.diff)}</td><td class="tr change-up">+${m.pct.toFixed(1)}%</td>
+          </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune variation</td></tr>'}</tbody>
+        </table></div></div>
+      </div>
+      <div>
+        <div class="section-title">📉 Plus fortes baisses</div>
+        <div class="table-wrap"><div class="table-scroll"><table>
+          <thead><tr><th>Carte</th><th class="tr">P1</th><th class="tr">P2</th><th class="tr">Δ</th><th class="tr">%</th></tr></thead>
+          <tbody>${topDown.length?topDown.map(m=>`<tr>
+            <td><div class="td-name">${m.nom}</div><div class="td-sub">${m.serie}</div></td>
+            <td class="tr mono">${eur(m.v1)}</td><td class="tr mono">${eur(m.v2)}</td>
+            <td class="tr change-down">${eur(m.diff)}</td><td class="tr change-down">${m.pct.toFixed(1)}%</td>
+          </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Aucune baisse</td></tr>'}</tbody>
+        </table></div></div>
+      </div>
+    </div>
+    ${newCards.length||goneCards.length?`<div class="g2">
+      ${newCards.length?`<div><div class="section-title">✨ Nouvelles cartes (${newCards.length})</div>
+        <div class="table-wrap"><div class="table-scroll"><table>
+          <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur</th></tr></thead>
+          <tbody>${newCards.slice(0,10).map(c=>`<tr>
+            <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
+            <td>${tagEtat(c['État'])}</td><td class="tr mono change-new">+${eur(c._actuel)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div></div></div>`:''}
+      ${goneCards.length?`<div><div class="section-title">🔴 Cartes retirées (${goneCards.length})</div>
+        <div class="table-wrap"><div class="table-scroll"><table>
+          <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur P1</th></tr></thead>
+          <tbody>${goneCards.slice(0,10).map(c=>`<tr>
+            <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
+            <td>${tagEtat(c['État'])}</td><td class="tr mono change-gone">${eur(c._actuel)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div></div></div>`:''}
+    </div>`:''}`;
+}
+
+/* ══════════════════════════════════════════════════
+   ÉVOLUTION PANEL
+══════════════════════════════════════════════════ */
+
+function savePeriod(){
+  const name=document.getElementById('period-name-input').value.trim();
+  const date=document.getElementById('period-date-input').value;
+  if(!name){alert('Donnez un nom à la période.');return;}
+  const c=DATA.p1.cartes, i=DATA.p1.items;
+  PERIODS.push({
+    id: Date.now(),
+    name, date: date||new Date().toISOString().slice(0,10),
+    cartes: c, items: i,
+    totalCartes: c.reduce((s,x)=>s+x._actuel,0),
+    totalItems:  i.reduce((s,x)=>s+x._actuel,0),
+  });
+  document.getElementById('period-name-input').value='';
+  renderEvolution();
+}
+
+function deletePeriod(id){
+  if(PERIODS.length<=1){alert('Gardez au moins une période.');return;}
+  PERIODS=PERIODS.filter(p=>p.id!==id);
+  renderEvolution();
+}
+
+function renderEvolution(){
+  renderPeriodList();
+  renderCharts();
+  renderTop10();
+}
+
+function renderPeriodList(){
+  const sorted=[...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  document.getElementById('period-list').innerHTML=sorted.map((p,i)=>{
+    const total=p.totalCartes+p.totalItems;
+    const prev=sorted[i-1];
+    const delta=prev?total-(prev.totalCartes+prev.totalItems):null;
+    return `<div class="period-row">
+      <div class="period-row-dot" style="background:${PERIOD_COLORS[i%PERIOD_COLORS.length]}"></div>
+      <div class="period-row-name">${p.name}</div>
+      <div class="period-row-date">${p.date}</div>
+      <div class="period-row-val">${eur(total)}</div>
+      ${delta!==null?`<div class="perf-badge ${delta>=0?'perf-pos':'perf-neg'}">${delta>=0?'+':''} ${eur(delta)}</div>`:'<div class="perf-badge" style="background:transparent;color:var(--muted)">ref</div>'}
+      ${p.id!==1?`<button class="period-row-del" onclick="deletePeriod(${p.id})">✕</button>`:'<div style="width:24px"></div>'}
+    </div>`;
+  }).join('');
+}
+
+function renderCharts(){
+  const sorted=[...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const labels=sorted.map(p=>p.name);
+  const totals=sorted.map(p=>+(p.totalCartes+p.totalItems).toFixed(2));
+  const cartsVals=sorted.map(p=>+p.totalCartes.toFixed(2));
+  const itemsVals=sorted.map(p=>+p.totalItems.toFixed(2));
+
+  const chartDefaults={
+    responsive:true,
+    plugins:{
+      legend:{labels:{color:'#9494aa',font:{family:'DM Sans',size:12}}},
+      tooltip:{callbacks:{label:ctx=>' '+eur(ctx.parsed.y||ctx.parsed)}}
+    },
+    scales:{
+      x:{ticks:{color:'#6b6b85',font:{family:'DM Mono',size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+      y:{ticks:{color:'#6b6b85',font:{family:'DM Mono',size:10},callback:v=>eur(v)},grid:{color:'rgba(255,255,255,.04)'}}
+    }
+  };
+
+  // Chart évolution totale
+  if(chartEvol)chartEvol.destroy();
+  chartEvol=new Chart(document.getElementById('chart-evolution'),{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Valeur totale',
+        data:totals,
+        borderColor:'#f0c040',
+        backgroundColor:'rgba(240,192,64,.08)',
+        pointBackgroundColor:'#f0c040',
+        pointRadius:5, pointHoverRadius:7,
+        fill:true, tension:.35, borderWidth:2,
+      }]
+    },
+    options:{...chartDefaults}
+  });
+
+  // Chart cartes vs scellé
+  if(chartSplit)chartSplit.destroy();
+  chartSplit=new Chart(document.getElementById('chart-split'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Cartes',data:cartsVals,backgroundColor:'rgba(74,158,255,.7)',borderRadius:4},
+        {label:'Scellé',data:itemsVals,backgroundColor:'rgba(240,192,64,.7)',borderRadius:4},
+      ]
+    },
+    options:{...chartDefaults,scales:{...chartDefaults.scales,x:{...chartDefaults.scales.x,stacked:false}}}
+  });
+}
+
+function setTop10Mode(mode){
+  top10Mode=mode;
+  document.getElementById('toggle-cartes').classList.toggle('active',mode==='cartes');
+  document.getElementById('toggle-items').classList.toggle('active',mode==='items');
+  renderTop10();
+}
+
+function renderTop10(){
+  const sorted=[...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  if(sorted.length<2){
+    document.getElementById('top10-content').innerHTML=`
+      <div class="empty-state"><div class="e-icon">🏆</div>
+      <p>Enregistrez au moins 2 périodes<br>pour voir les meilleurs performers.</p></div>`;
+    return;
+  }
+
+  if(top10Mode==='cartes'){
+    // Comparer chaque carte entre la 1ère et la dernière période
+    const first=sorted[0], last=sorted[sorted.length-1];
+    const map1=Object.fromEntries(first.cartes.map(c=>[c._key,c]));
+    const map2=Object.fromEntries(last.cartes.map(c=>[c._key,c]));
+    const allKeys=new Set([...Object.keys(map1),...Object.keys(map2)]);
+    const perf=[];
+    allKeys.forEach(k=>{
+      const a=map1[k],b=map2[k];
+      if(a&&b){
+        const diff=b._actuel-a._actuel;
+        const pctVal=a._actuel>0?diff/a._actuel*100:0;
+        perf.push({nom:a['Nom'],serie:a['Série'],etat:a['État'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
+      }
+    });
+    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,10);
+    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,10);
+
+    document.getElementById('top10-content').innerHTML=`
+      <div class="g2">
+        <div>
+          <div class="section-title">🥇 Top 10 hausses (${first.name} → ${last.name})</div>
+          <div class="table-wrap"><div class="table-scroll"><table>
+            <thead><tr><th>#</th><th>Carte</th><th class="tr">${first.name}</th><th class="tr">${last.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+            <tbody>${top10up.map((m,i)=>`<tr>
+              <td class="rank">${i+1}</td>
+              <td><div class="td-name">${m.nom}</div><div class="td-sub">${m.serie} · ${tagEtat(m.etat)}</div></td>
+              <td class="tr mono">${eur(m.v1)}</td>
+              <td class="tr mono" style="color:var(--gold)">${eur(m.v2)}</td>
+              <td class="tr change-up">+${eur(m.diff)}</td>
+              <td class="tr"><span class="perf-badge perf-pos">+${m.pct.toFixed(1)}%</span></td>
+            </tr>`).join('')}</tbody>
+          </table></div></div>
+        </div>
+        <div>
+          <div class="section-title">📉 Top 10 baisses (${first.name} → ${last.name})</div>
+          <div class="table-wrap"><div class="table-scroll"><table>
+            <thead><tr><th>#</th><th>Carte</th><th class="tr">${first.name}</th><th class="tr">${last.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+            <tbody>${top10down.length?top10down.map((m,i)=>`<tr>
+              <td class="rank">${i+1}</td>
+              <td><div class="td-name">${m.nom}</div><div class="td-sub">${m.serie} · ${tagEtat(m.etat)}</div></td>
+              <td class="tr mono">${eur(m.v1)}</td>
+              <td class="tr mono" style="color:var(--red)">${eur(m.v2)}</td>
+              <td class="tr change-down">${eur(m.diff)}</td>
+              <td class="tr"><span class="perf-badge perf-neg">${m.pct.toFixed(1)}%</span></td>
+            </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Aucune baisse</td></tr>'}</tbody>
+          </table></div></div>
+        </div>
+      </div>`;
+
+  } else {
+    // Items
+    const first=sorted[0], last=sorted[sorted.length-1];
+    const map1=Object.fromEntries(first.items.map(i=>[i._key,i]));
+    const map2=Object.fromEntries(last.items.map(i=>[i._key,i]));
+    const allKeys=new Set([...Object.keys(map1),...Object.keys(map2)]);
+    const perf=[];
+    allKeys.forEach(k=>{
+      const a=map1[k],b=map2[k];
+      if(a&&b){
+        const diff=b._actuel-a._actuel;
+        const pctVal=a._actuel>0?diff/a._actuel*100:0;
+        perf.push({serie:a['Série'],type:a['Item'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
+      }
+    });
+    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,10);
+    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,10);
+
+    document.getElementById('top10-content').innerHTML=`
+      <div class="g2">
+        <div>
+          <div class="section-title">🥇 Top 10 hausses items (${first.name} → ${last.name})</div>
+          <div class="table-wrap"><div class="table-scroll"><table>
+            <thead><tr><th>#</th><th>Item</th><th class="tr">${first.name}</th><th class="tr">${last.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+            <tbody>${top10up.map((m,i)=>`<tr>
+              <td class="rank">${i+1}</td>
+              <td><div class="td-name">${m.serie}</div><div class="td-sub">${tagType(m.type)}</div></td>
+              <td class="tr mono">${eur(m.v1)}</td>
+              <td class="tr mono" style="color:var(--gold)">${eur(m.v2)}</td>
+              <td class="tr change-up">+${eur(m.diff)}</td>
+              <td class="tr"><span class="perf-badge perf-pos">+${m.pct.toFixed(1)}%</span></td>
+            </tr>`).join('')}</tbody>
+          </table></div></div>
+        </div>
+        <div>
+          <div class="section-title">📉 Top 10 baisses items (${first.name} → ${last.name})</div>
+          <div class="table-wrap"><div class="table-scroll"><table>
+            <thead><tr><th>#</th><th>Item</th><th class="tr">${first.name}</th><th class="tr">${last.name}</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+            <tbody>${top10down.length?top10down.map((m,i)=>`<tr>
+              <td class="rank">${i+1}</td>
+              <td><div class="td-name">${m.serie}</div><div class="td-sub">${tagType(m.type)}</div></td>
+              <td class="tr mono">${eur(m.v1)}</td>
+              <td class="tr mono" style="color:var(--red)">${eur(m.v2)}</td>
+              <td class="tr change-down">${eur(m.diff)}</td>
+              <td class="tr"><span class="perf-badge perf-neg">${m.pct.toFixed(1)}%</span></td>
+            </tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">Aucune baisse</td></tr>'}</tbody>
+          </table></div></div>
+        </div>
+      </div>`;
+  }
+}
+
+/* ── RENDER ALL ── */
+function renderAll(){
+  const c1=DATA.p1.cartes,i1=DATA.p1.items;
+  const c2=DATA.p2.cartes,i2=DATA.p2.items;
+  const s1=computeStats(c1,i1);
+  const s2=(c2&&i2)?computeStats(c2,i2):null;
+  renderOverview(s1,s2);
+  renderCartes(c1);
+  renderScelle(i1);
+  if(c2&&i2){renderCompare(c1,i1,c2,i2);document.getElementById('period-badge').textContent='P1 → P2';}
+  else{document.getElementById('compare-content').innerHTML='<div class="empty-state"><div class="e-icon">📊</div><p>Glissez les fichiers CSV de la Période 2<br>dans la barre d\'import ci-dessus pour comparer.</p></div>';document.getElementById('period-badge').textContent='PÉRIODE 1';}
+  document.getElementById('footer-info').textContent=`${c1.length} cartes · ${i1.length} items · Total : ${(s1.totalCartes+s1.totalItems).toLocaleString('fr-FR',{minimumFractionDigits:2})} €`;
+  renderEvolution();
+}
+
+/* ── TABS ── */
+function setTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.tab[onclick="setTab('${name}')"]`).classList.add('active');
+  document.getElementById(`panel-${name}`).classList.add('active');
+  if(name==='evolution')renderEvolution();
+}
+
+/* ── INIT ── */
+document.getElementById('period-date-input').value=new Date().toISOString().slice(0,10);
+renderAll();
+</script>
+</body>
+</html>
