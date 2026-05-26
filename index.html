@@ -604,7 +604,8 @@ function filterCartes(){
     const key = c._key || `${c['Nom']}|${c['Numéro']}|${c['Série']}|${c['État']}|${c['Version']||''}`;
     const cv = computeVolatility(key, 'carte');
     const vcls = volClass(cv);
-    return `<tr style="cursor:pointer" onclick="openModal('${key.replace(/'/g,"\\'")}')`      <td class="rank">${i+1}</td>
+    return `<tr style="cursor:pointer" onclick="openModal('${key.replace(/'/g,'\\'')}')">
+      <td class="rank">${i+1}</td>
       <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']} · ${c['Numéro']}</div></td>
       <td>${tagEtat(c['État'])}</td>
       <td><span style="font-size:10px;color:var(--muted)">${c['Version']||''}</span></td>
