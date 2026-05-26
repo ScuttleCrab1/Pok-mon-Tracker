@@ -1032,12 +1032,16 @@ function openModal(key) {
 
   const imgWrap = document.getElementById('modal-img-wrap');
 
-  const tcgHeaders = { 'X-Api-Key': TCG_API_KEY };
-
   async function tryFetchTCG(query) {
     const r = await fetch(
       `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&pageSize=12`,
-      { headers: tcgHeaders }
+      {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'X-Api-Key': TCG_API_KEY,
+        }
+      }
     );
     const data = await r.json();
     if (!data.data || data.data.length === 0) return null;
