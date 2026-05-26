@@ -601,10 +601,10 @@ function filterCartes(){
   const f=_cartesData.filter(c=>(!q||c['Nom'].toLowerCase().includes(q)||c['Série'].toLowerCase().includes(q))&&(!fe||c['État']===fe)&&(!fb||c['Bloc']===fb));
   document.getElementById('tbody-cartes').innerHTML=f.map((c,i)=>{
     const gain=c._achat>0?c._actuel-c._achat:null;
-    const cv = computeVolatility(c._key, 'carte');
+    const key = c._key || `${c['Nom']}|${c['Numéro']}|${c['Série']}|${c['État']}|${c['Version']||''}`;
+    const cv = computeVolatility(key, 'carte');
     const vcls = volClass(cv);
-    return `<tr style="cursor:pointer" onclick="openModal('${c._key.replace(/'/g,"\\'")}')">
-      <td class="rank">${i+1}</td>
+    return `<tr style="cursor:pointer" onclick="openModal('${key.replace(/'/g,"\\'")}')`      <td class="rank">${i+1}</td>
       <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']} · ${c['Numéro']}</div></td>
       <td>${tagEtat(c['État'])}</td>
       <td><span style="font-size:10px;color:var(--muted)">${c['Version']||''}</span></td>
@@ -1448,7 +1448,36 @@ function setTab(name){
 }
 
 /* ── INIT ── */
-
+function fixSeedData(cartes, items) {
+  cartes.forEach(c => {
+    if (!c._key) c._key = `${c['Nom']||''}|${c['Numéro']||''}|${c['Série']||''}|${c['État']||''}|${c['Version']||''}`;
+    if (c._actuel === undefined) c._actuel = parseNum(c['Prix Actuel']);
+    if (c._achat  === undefined) c._achat  = parseNum(c['Prix Achat']);
+    if (c._gain   === undefined) c._gain   = c._achat > 0 ? c._actuel - c._achat : null;
+  });
+  items.forEach(i => {
+    if (!i._key) i._key = `${i['Item']||''}|${i['Série']||''}`;
+    if (i._actuel === undefined) i._actuel = parseNum(i['Prix Actuel']);
+    if (i._achat  === undefined) i._achat  = parseNum(i['Prix Achat']);
+    if (i._gain   === undefined) i._gain   = parseNum(i['Gain Théorique']);
+    if (i._qte    === undefined) i._qte    = parseInt(i['Quantité']) || 1;
+    if (i._pct    === undefined) i._pct    = i._achat > 0 ? (i._gain / i._achat * 100) : null;
+  });
+  PERIODS.forEach(p => {
+    (p.cartes||[]).forEach(c => {
+      if (!c._key) c._key = `${c['Nom']||''}|${c['Numéro']||''}|${c['Série']||''}|${c['État']||''}|${c['Version']||''}`;
+      if (c._actuel === undefined) c._actuel = parseNum(c['Prix Actuel']);
+      if (c._achat  === undefined) c._achat  = parseNum(c['Prix Achat']);
+    });
+    (p.items||[]).forEach(i => {
+      if (!i._key) i._key = `${i['Item']||''}|${i['Série']||''}`;
+      if (i._actuel === undefined) i._actuel = parseNum(i['Prix Actuel']);
+      if (i._achat  === undefined) i._achat  = parseNum(i['Prix Achat']);
+      if (i._gain   === undefined) i._gain   = parseNum(i['Gain Théorique']);
+    });
+  });
+}
+fixSeedData(DATA.p1.cartes, DATA.p1.items);
 renderAll();
 </script>
 </body>
