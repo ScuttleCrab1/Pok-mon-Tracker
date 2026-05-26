@@ -872,6 +872,10 @@ function volLabel(cv) {
 }
 
 
+
+/* ── CLÉ API POKÉMON TCG ── */
+const TCG_API_KEY = 'ea266427-2a4b-4dbb-9a98-b54aec7a2a4f';
+
 /* ── TABLE MAPPING SÉRIES FR → IDs API POKÉMON TCG ── */
 const TCG_SET_MAP = {
   /* ÉCARLATE ET VIOLET */
@@ -1025,16 +1029,21 @@ function openModal(key) {
   const setId = TCG_SET_MAP[c['Série']] || null;
   const num   = (c['Numéro']||'').split('/')[0].replace(/^0+/,'');
 
-  // Stratégie : essayer plusieurs requêtes jusqu'à trouver une image
   const imgWrap = document.getElementById('modal-img-wrap');
-  
-  async function tryFetch(query) {
-    const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&pageSize=10`);
+
+  const tcgHeaders = { 'X-Api-Key': TCG_API_KEY };
+
+  async function tryFetchTCG(query) {
+    const r = await fetch(
+      `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&pageSize=12`,
+      { headers: tcgHeaders }
+    );
     const data = await r.json();
     if (!data.data || data.data.length === 0) return null;
+    // Chercher la carte avec exactement le bon numéro
     const match = data.data.find(card => {
-      const cardNum = (card.number||'').replace(/^0+/,'');
-      return cardNum === num;
+      const cardNum = String(card.number||'').replace(/^0+/,'').toLowerCase();
+      return cardNum === num.toLowerCase();
     }) || data.data[0];
     return match?.images?.large || match?.images?.small || null;
   }
@@ -1042,20 +1051,23 @@ function openModal(key) {
   (async () => {
     try {
       let img = null;
-      // Tentative 1 : numéro + set exact
-      if (setId && num) img = await tryFetch(`number:${num} set.id:${setId}`);
-      // Tentative 2 : set seul, prendre la carte avec ce numéro
-      if (!img && setId) img = await tryFetch(`set.id:${setId} number:${num}`);
-      // Tentative 3 : numéro seul dans tous les sets de la même série
-      if (!img && num) img = await tryFetch(`number:${num}`);
-      
+      // Tentative 1 : set exact + numéro (le plus précis)
+      if (setId && num) img = await tryFetchTCG(`set.id:${setId} number:${num}`);
+      // Tentative 2 : set seul (si numéro non trouvé)
+      if (!img && setId) img = await tryFetchTCG(`set.id:${setId}`);
+      // Tentative 3 : numéro dans tous les sets (fallback large)
+      if (!img && num && num.length > 0) img = await tryFetchTCG(`number:${num}`);
+
       if (img) {
-        imgWrap.innerHTML = `<img src="${img}" alt="${c['Nom']}" loading="lazy" style="border-radius:10px;width:100%">`;
+        imgWrap.innerHTML = `<img src="${img}" alt="${c['Nom']}" loading="lazy"
+          style="border-radius:10px;width:100%;display:block">`;
       } else {
-        imgWrap.innerHTML = '<div class="modal-img-placeholder" style="padding:20px;color:var(--muted);text-align:center;font-size:13px">Image non disponible</div>';
+        imgWrap.innerHTML = `<div style="padding:30px;color:var(--muted);text-align:center;font-size:13px;line-height:1.6">
+          🃏<br>Image non disponible</div>`;
       }
     } catch(e) {
-      imgWrap.innerHTML = '<div class="modal-img-placeholder" style="padding:20px;color:var(--muted);text-align:center;font-size:13px">Image non disponible</div>';
+      imgWrap.innerHTML = `<div style="padding:30px;color:var(--muted);text-align:center;font-size:13px">
+        Erreur de chargement</div>`;
     }
   })();
 }
