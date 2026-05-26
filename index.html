@@ -604,7 +604,7 @@ function filterCartes(){
     const key = c._key || `${c['Nom']}|${c['Numéro']}|${c['Série']}|${c['État']}|${c['Version']||''}`;
     const cv = computeVolatility(key, 'carte');
     const vcls = volClass(cv);
-    return `<tr style="cursor:pointer" onclick="openModal('${key.replace(/'/g,'\\'')}')">
+    return `<tr style="cursor:pointer" onclick="openModal(this.dataset.key)" data-key="${key}">
       <td class="rank">${i+1}</td>
       <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']} · ${c['Numéro']}</div></td>
       <td>${tagEtat(c['État'])}</td>
@@ -939,7 +939,7 @@ function extLinksHtml(ebayQ, cmQ) {
 let _modalChart = null;
 
 function openModal(key) {
-  const c = _cartesData.find(x=>x._key===key);
+  const c = _cartesData.find(x=>(x._key||'')===key);
   if (!c) return;
 
   const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
