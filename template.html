@@ -874,41 +874,6 @@ function volLabel(cv) {
 
 
 
-/* ── CLÉ API POKÉMON TCG ── */
-const TCG_API_KEY = 'ea266427-2a4b-4dbb-9a98-b54aec7a2a4f';
-
-/* ── TABLE MAPPING SÉRIES FR → IDs API POKÉMON TCG ── */
-const TCG_SET_MAP = {
-  /* ÉCARLATE ET VIOLET */
-  'Ecarlate et Violet':'sv1','Evolutions Prismatiques':'sv8pt5','Fable Nebuleuse':'sv6pt5',
-  'Faille Paradoxe':'sv4','Flammes Fantasmagoriques':'sv3','Flammes Obsidiennes':'sv3pt5',
-  'Forces Temporelles':'sv5','Mascarade Crepusculaire':'sv6','Couronne Stellaire':'sv7',
-  'Etincelles Deferlantes':'sv8','Aventures Ensemble':'sv6','Heros Transcendants':'sv5',
-  'Destinees de Paldea':'sv4pt5','151':'sv3pt5','Promos Ecarlate et Violet':'svp',
-  /* ÉPÉE ET BOUCLIER */
-  'Astres Radieux':'swsh10','Stars Etincelantes':'swsh9','Forces Cachees':'swsh6',
-  'Frontieres Franchies':'swsh7','Origine Perdue':'swsh11','Zenith Supreme':'swsh12pt5',
-  'Promos Epee et Bouclier':'swshp',
-  /* SOLEIL ET LUNE */
-  'Rivalites Destinees':'sm8','Duo de Choc':'sm9','Alliance Infaillible':'sm10',
-  /* XY */
-  'Mega-Evolution':'xy8','Promos Mega-Evolution':'xyp',
-  /* NOIR ET BLANC */
-  'Pouvoirs Emergeants':'bw2','Rivaux Emergeants':'bw3','Foudre Noire':'bw5',
-  'Dragons Exaltes':'bw6','Glaciation Plasma':'bw8','Flamme Blanche':'bw9',
-  'Promos Black Star Noir et Blanc':'bwp',
-  /* HEARTGOLD SOULSILVER */
-  'Heartgold Soulsilver':'hgss1','Indomptable':'hgss2','L Appel des Legendes':'hgss3',
-  'Triomphe':'hgss4','Vainqueurs Supremes':'hgss5',
-  /* EX */
-  'Rubis et Saphir':'ex1','Rouge Feu Vert Feuille':'ex2','Tempete de Sable':'ex3',
-  'Ile des Dragons':'ex4','Team Magma Vs Team Aqua':'ex5','Legendes Oubliees':'ex6',
-  'Emeraude':'ex10','Espece Delta':'ex11','Dragon':'ex12','Tresors Mysterieux':'ex13',
-  'Deoxys':'ex14','Dechainement':'ex15',
-  /* WIZARDS */
-  'Set de Base':'base1','Team Rocket':'base4',
-  'Expedition':'ecard1','Aquapolis':'ecard2',
-};
 
 
 /* ── GÉNÉRATEUR URLS EBAY & CARDMARKET ── */
@@ -1027,54 +992,16 @@ function openModal(key) {
   });
 
   // Chercher image via API Pokémon TCG par numéro + set
-  const setId = TCG_SET_MAP[c['Série']] || null;
-  const num   = (c['Numéro']||'').split('/')[0].replace(/^0+/,'');
-
   const imgWrap = document.getElementById('modal-img-wrap');
-
-  async function tryFetchTCG(query) {
-    const r = await fetch(
-      `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&pageSize=12`,
-      {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-          'X-Api-Key': TCG_API_KEY,
-        }
-      }
-    );
-    const data = await r.json();
-    if (!data.data || data.data.length === 0) return null;
-    // Chercher la carte avec exactement le bon numéro
-    const match = data.data.find(card => {
-      const cardNum = String(card.number||'').replace(/^0+/,'').toLowerCase();
-      return cardNum === num.toLowerCase();
-    }) || data.data[0];
-    return match?.images?.large || match?.images?.small || null;
+  // Image pré-récupérée côté serveur par generate.py (pas de CORS)
+  const img = c._img || null;
+  if (img) {
+    imgWrap.innerHTML = `<img src="${img}" alt="${c['Nom']}" loading="lazy"
+      style="border-radius:10px;width:100%;display:block">`;
+  } else {
+    imgWrap.innerHTML = `<div style="padding:30px;color:var(--muted);text-align:center;font-size:13px;line-height:1.6">
+      🃏<br>Image non disponible</div>`;
   }
-
-  (async () => {
-    try {
-      let img = null;
-      // Tentative 1 : set exact + numéro (le plus précis)
-      if (setId && num) img = await tryFetchTCG(`set.id:${setId} number:${num}`);
-      // Tentative 2 : set seul (si numéro non trouvé)
-      if (!img && setId) img = await tryFetchTCG(`set.id:${setId}`);
-      // Tentative 3 : numéro dans tous les sets (fallback large)
-      if (!img && num && num.length > 0) img = await tryFetchTCG(`number:${num}`);
-
-      if (img) {
-        imgWrap.innerHTML = `<img src="${img}" alt="${c['Nom']}" loading="lazy"
-          style="border-radius:10px;width:100%;display:block">`;
-      } else {
-        imgWrap.innerHTML = `<div style="padding:30px;color:var(--muted);text-align:center;font-size:13px;line-height:1.6">
-          🃏<br>Image non disponible</div>`;
-      }
-    } catch(e) {
-      imgWrap.innerHTML = `<div style="padding:30px;color:var(--muted);text-align:center;font-size:13px">
-        Erreur de chargement</div>`;
-    }
-  })();
 }
 
 function closeModal(e) {
