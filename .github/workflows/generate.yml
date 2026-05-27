@@ -12,21 +12,25 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: 📥 Récupérer le dépôt
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: 🐍 Configurer Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: 🔧 Générer index.html
         run: python3 generate.py
-      - name: 📤 Committer et pousser index.html
+
+      - name: 📤 Committer et pousser
         run: |
-          git config user.name "github-actions[bot]"
+          git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html periodes/
+          git add index.html periodes/ images/
           git diff --staged --quiet || git commit -m "🎴 Mise à jour automatique $(date +'%Y-%m-%d %H:%M')"
           git push
