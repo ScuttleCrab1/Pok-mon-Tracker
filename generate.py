@@ -1,12 +1,6 @@
 #!/usr/bin/env python3
 """
 Pokémon Collection Tracker — Générateur automatique
-----------------------------------------------------
-Ce script lit les fichiers CSV dans /data/, charge les périodes
-depuis /periodes/, télécharge les images des cartes via l'API
-Pokémon TCG et les stocke dans /images/, puis regénère index.html.
-
-Usage : python3 generate.py
 """
 
 import csv, json, os, glob, re, time, urllib.request, urllib.parse
@@ -21,29 +15,62 @@ TEMPLATE    = os.path.join(ROOT, 'template.html')
 
 TCG_API_KEY = 'ea266427-2a4b-4dbb-9a98-b54aec7a2a4f'
 
+# Mapping séries FR → set IDs API Pokémon TCG
 SET_MAP = {
-    '151':'sv3pt5','Alliance Infaillible':'sm10','Aquapolis':'ecard2',
-    'Astres Radieux':'swsh10','Aventures Ensemble':'sv6','Couronne Stellaire':'sv7',
-    'Dechainement':'ex15','Deoxys':'ex14','Destinees de Paldea':'sv4pt5',
-    'Dragon':'ex12','Dragons Exaltes':'bw6','Duo de Choc':'sm9',
-    'Ecarlate et Violet':'sv1','Emeraude':'ex10','Espece Delta':'ex11',
-    'Etincelles Deferlantes':'sv8','Evolutions Prismatiques':'sv8pt5',
-    'Expedition':'ecard1','Fable Nebuleuse':'sv6pt5','Faille Paradoxe':'sv4',
-    'Flamme Blanche':'bw9','Flammes Fantasmagoriques':'sv3',
-    'Flammes Obsidiennes':'sv3pt5','Forces Cachees':'swsh6',
-    'Forces Temporelles':'sv5','Foudre Noire':'bw5','Frontieres Franchies':'swsh7',
-    'Glaciation Plasma':'bw8','Heartgold Soulsilver':'hgss1',
-    'Heros Transcendants':'sv5','Ile des Dragons':'ex4','Indomptable':'hgss2',
-    'L Appel des Legendes':'hgss3','Legendes Oubliees':'cel25',
-    'Mascarade Crepusculaire':'sv6pt5','Mega-Evolution':'xy8',
-    'Origine Perdue':'swsh11','Pouvoirs Emergeants':'bw2',
-    'Promos Black Star Noir et Blanc':'bwp','Promos Ecarlate et Violet':'svp',
-    'Promos Mega-Evolution':'xyp','Rivalites Destinees':'sm8',
-    'Rivaux Emergeants':'bw3','Rouge Feu Vert Feuille':'ex2',
-    'Rubis et Saphir':'ex1','Set de Base':'base1','Stars Etincelantes':'swsh9',
-    'Team Magma Vs Team Aqua':'ex5','Team Rocket':'base4',
-    'Tempete de Sable':'ex3','Tresors Mysterieux':'ex13',
-    'Triomphe':'hgss4','Vainqueurs Supremes':'hgss5','Zenith Supreme':'swsh12pt5',
+    '151':                          'sv3pt5',
+    'Alliance Infaillible':         'sm10',
+    'Aquapolis':                    'ecard2',
+    'Astres Radieux':               'swsh10',
+    'Aventures Ensemble':           'sv6',
+    'Couronne Stellaire':           'sv7',
+    'Dechainement':                 'ex15',
+    'Deoxys':                       'ex14',
+    'Destinees de Paldea':          'sv4pt5',
+    'Dragon':                       'ex12',
+    'Dragons Exaltes':              'bw6',
+    'Duo de Choc':                  'sm9',
+    'Ecarlate et Violet':           'sv1',
+    'Emeraude':                     'ex10',
+    'Espece Delta':                 'ex11',
+    'Etincelles Deferlantes':       'sv8',
+    'Evolutions Prismatiques':      'sv8pt5',
+    'Expedition':                   'ecard1',
+    'Fable Nebuleuse':              'sv6pt5',
+    'Faille Paradoxe':              'sv4',
+    'Flamme Blanche':               'bw9',
+    'Flammes Fantasmagoriques':     'sv3',
+    'Flammes Obsidiennes':          'sv3pt5',
+    'Forces Cachees':               'swsh6',
+    'Forces Temporelles':           'sv5',
+    'Foudre Noire':                 'bw5',
+    'Frontieres Franchies':         'swsh7',
+    'Glaciation Plasma':            'bw8',
+    'Heartgold Soulsilver':         'hgss1',
+    'Heros Transcendants':          'sv5',
+    'Ile des Dragons':              'ex4',
+    'Indomptable':                  'hgss2',
+    'L Appel des Legendes':         'hgss3',
+    'Legendes Oubliees':            'cel25',
+    'Mascarade Crepusculaire':      'sv6pt5',
+    'Mega-Evolution':               'xy8',
+    'Origine Perdue':               'swsh11',
+    'Pouvoirs Emergeants':          'bw2',
+    'Promos Black Star Noir et Blanc': 'bwp',
+    'Promos Ecarlate et Violet':    'svp',
+    'Promos Mega-Evolution':        'xyp',
+    'Rivalites Destinees':          'sm8',
+    'Rivaux Emergeants':            'bw3',
+    'Rouge Feu Vert Feuille':       'ex2',
+    'Rubis et Saphir':              'ex1',
+    'Set de Base':                  'base1',
+    'Stars Etincelantes':           'swsh9',
+    'Team Magma Vs Team Aqua':      'ex5',
+    'Team Rocket':                  'base4',
+    'Tempete de Sable':             'ex3',
+    'Tresors Mysterieux':           'ex13',
+    'Triomphe':                     'hgss4',
+    'Vainqueurs Supremes':          'hgss3',
+    'Zenith Supreme':               'swsh12pt5',
 }
 
 # ── HELPERS ────────────────────────────────────────────────────────
@@ -84,91 +111,109 @@ def parse_items(filepath):
 
 # ── IMAGES ─────────────────────────────────────────────────────────
 
+def api_get(query, page_size=20):
+    """Appel API Pokémon TCG"""
+    url = f"https://api.pokemontcg.io/v2/cards?q={urllib.parse.quote(query)}&pageSize={page_size}"
+    req = urllib.request.Request(url, headers={
+        'X-Api-Key': TCG_API_KEY,
+        'User-Agent': 'PokemonTracker/1.0'
+    })
+    with urllib.request.urlopen(req, timeout=15) as r:
+        return json.loads(r.read()).get('data', [])
+
+def clean_num(numero):
+    """Nettoyer le numéro de carte"""
+    if not numero:
+        return '', ''
+    # Ex: "234/091" → "234", "026/131" → "26" et "026"
+    num = numero.split('/')[0]
+    num_clean = num.lstrip('0') or num  # sans zéros
+    return num_clean, num  # (sans zéros, original)
+
+def find_best_match(cards, num_clean, num_orig):
+    """Trouver la carte avec le bon numéro dans une liste"""
+    for c in cards:
+        card_num = str(c.get('number', ''))
+        if card_num.lstrip('0') == num_clean or card_num == num_orig:
+            return c
+    return cards[0] if cards else None
+
 def fetch_image_url(nom, numero, serie):
-    """Récupère l'URL de l'image via l'API Pokémon TCG (côté serveur, pas de CORS)"""
+    """Récupère l'URL de l'image via plusieurs stratégies"""
     set_id = SET_MAP.get(serie)
-    num    = numero.split('/')[0].lstrip('0') if numero else ''
-    if not num:
+    num_clean, num_orig = clean_num(numero)
+
+    if not num_clean:
         return None
 
-    queries = []
-    if set_id and num:
-        queries.append(f"set.id:{set_id} number:{num}")
-    if set_id:
-        queries.append(f"set.id:{set_id}")
-    if num:
-        queries.append(f"number:{num}")
+    strategies = []
 
-    for query in queries:
+    # Stratégie 1 : set.id + number exact
+    if set_id:
+        strategies.append(f"set.id:{set_id} number:{num_orig}")
+        strategies.append(f"set.id:{set_id} number:{num_clean}")
+
+    # Stratégie 2 : number seul (fonctionne bien pour cartes uniques)
+    strategies.append(f"number:{num_orig}")
+    strategies.append(f"number:{num_clean}")
+
+    for query in strategies:
         try:
-            url = f"https://api.pokemontcg.io/v2/cards?q={urllib.parse.quote(query)}&pageSize=12"
-            req = urllib.request.Request(url, headers={
-                'X-Api-Key': TCG_API_KEY,
-                'User-Agent': 'PokemonTracker/1.0'
-            })
-            with urllib.request.urlopen(req, timeout=10) as r:
-                data = json.loads(r.read())
-            cards = data.get('data', [])
-            if not cards:
-                continue
-            # Chercher la carte avec le bon numéro
-            match = next((c for c in cards if str(c.get('number','')).lstrip('0') == num), cards[0])
-            img = match.get('images', {}).get('large') or match.get('images', {}).get('small')
-            if img:
-                return img
-        except Exception as e:
+            cards = api_get(query)
+            if cards:
+                match = find_best_match(cards, num_clean, num_orig)
+                if match:
+                    img = match.get('images', {}).get('large') or match.get('images', {}).get('small')
+                    if img:
+                        return img
+            time.sleep(0.05)
+        except Exception:
+            time.sleep(0.2)
             continue
-        time.sleep(0.1)
+
     return None
 
 def download_images(cartes):
-    """Télécharge les images manquantes et retourne un dict key->chemin local"""
+    """Récupère les URLs d'images avec cache"""
     os.makedirs(IMAGES_DIR, exist_ok=True)
-    images = {}
-    total  = len(cartes)
-    done   = 0
-
-    # Charger le cache existant
     cache_path = os.path.join(IMAGES_DIR, 'cache.json')
+
+    # Charger le cache
     cache = {}
     if os.path.exists(cache_path):
         with open(cache_path, encoding='utf-8') as f:
             cache = json.load(f)
 
-    for c in cartes:
+    images  = {}
+    to_fetch = [c for c in cartes if c['_key'] not in cache]
+    cached   = [c for c in cartes if c['_key'] in cache]
+
+    print(f"  → {len(cached)} images en cache, {len(to_fetch)} à récupérer")
+
+    for i, c in enumerate(to_fetch):
         key    = c['_key']
-        nom    = c.get('Nom', '')
-        numero = c.get('Numéro', '')
-        serie  = c.get('Série', '')
+        img_url = fetch_image_url(c.get('Nom',''), c.get('Numéro',''), c.get('Série',''))
+        cache[key]  = img_url
+        images[key] = img_url
+        time.sleep(0.08)
 
-        # Déjà dans le cache ?
-        if key in cache:
-            images[key] = cache[key]
-            done += 1
-            continue
+        if (i + 1) % 25 == 0:
+            # Sauvegarder le cache intermédiaire
+            with open(cache_path, 'w', encoding='utf-8') as f:
+                json.dump(cache, f, ensure_ascii=False)
+            found = sum(1 for v in cache.values() if v)
+            print(f"  → {i+1}/{len(to_fetch)} traités ({found} images trouvées)")
 
-        # Chercher l'URL via l'API
-        img_url = fetch_image_url(nom, numero, serie)
-        if img_url:
-            # Stocker l'URL directement (pas besoin de télécharger le fichier)
-            cache[key] = img_url
-            images[key] = img_url
-            done += 1
-            if done % 20 == 0:
-                print(f"  ✓ Images : {done}/{total}")
-        else:
-            cache[key] = None
-            images[key] = None
-            done += 1
+    # Remplir depuis le cache pour les cartes déjà traitées
+    for c in cached:
+        images[c['_key']] = cache[c['_key']]
 
-        time.sleep(0.05)  # Respecter le rate limit
-
-    # Sauvegarder le cache
+    # Sauvegarde finale du cache
     with open(cache_path, 'w', encoding='utf-8') as f:
         json.dump(cache, f, ensure_ascii=False)
 
     found = sum(1 for v in images.values() if v)
-    print(f"  ✓ Images : {found}/{total} trouvées")
+    print(f"  ✓ Images : {found}/{len(cartes)} trouvées")
     return images
 
 # ── LOAD/SAVE PERIODS ──────────────────────────────────────────────
@@ -213,7 +258,6 @@ def generate_html(cartes, items, periods, images):
     with open(TEMPLATE, 'r', encoding='utf-8') as f:
         template = f.read()
 
-    # Ajouter les URLs d'images dans les données cartes
     for c in cartes:
         c['_img'] = images.get(c['_key'])
     for p in periods:
@@ -245,12 +289,11 @@ def main():
     print(f"  ✓ Cartes  : {os.path.basename(cartes_file)}")
     print(f"  ✓ Items   : {os.path.basename(items_file)}")
 
-    cartes  = parse_cartes(cartes_file)
-    items   = parse_items(items_file)
-    total   = sum(c['_actuel'] for c in cartes) + sum(i['_actuel'] for i in items)
+    cartes = parse_cartes(cartes_file)
+    items  = parse_items(items_file)
+    total  = sum(c['_actuel'] for c in cartes) + sum(i['_actuel'] for i in items)
     print(f"  ✓ {len(cartes)} cartes · {len(items)} items · Total : {total:.2f} €")
 
-    # Télécharger les images (avec cache)
     print("  → Récupération des images...")
     images = download_images(cartes)
 
