@@ -386,6 +386,19 @@ tr:hover td{background:rgba(240,192,64,.025)}
 
   <!-- COMPARE -->
   <div class="panel" id="panel-compare">
+    <div id="compare-selectors" style="display:none;margin-bottom:20px">
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
+        <div class="form-group">
+          <span class="form-label">Période de référence</span>
+          <select class="filter-select" id="compare-sel-p1" onchange="onCompareSelect()" style="width:200px;padding:9px 12px"></select>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--muted);padding-bottom:4px">→</div>
+        <div class="form-group">
+          <span class="form-label">Période à comparer</span>
+          <select class="filter-select" id="compare-sel-p2" onchange="onCompareSelect()" style="width:200px;padding:9px 12px"></select>
+        </div>
+      </div>
+    </div>
     <div id="compare-content">
       <div class="empty-state">
         <div class="e-icon">📊</div>
@@ -1032,14 +1045,60 @@ function renderScelle(items){
   document.getElementById('type-chart').innerHTML='<div>'+barHtml(ta2,it=>TYPE_C[it.t]||'gray',it=>it.gain,it=>it.t)+'</div>';
 }
 
-/* ── RENDER COMPARE — auto avant-dernière vs dernière période ── */
+/* ── RENDER COMPARE — avec sélecteurs de périodes ── */
+function populateCompareSelectors() {
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const sel1 = document.getElementById('compare-sel-p1');
+  const sel2 = document.getElementById('compare-sel-p2');
+  if (!sel1 || !sel2) return;
+
+  const options = sorted.map((p,i) =>
+    `<option value="${p.id}">${p.name} (${p.date})</option>`
+  ).join('');
+
+  sel1.innerHTML = options;
+  sel2.innerHTML = options;
+
+  // Par défaut : avant-dernière vs dernière
+  if (sorted.length >= 2) {
+    sel1.value = sorted[sorted.length-2].id;
+    sel2.value = sorted[sorted.length-1].id;
+  }
+  document.getElementById('compare-selectors').style.display = 'block';
+}
+
+function onCompareSelect() {
+  renderCompare();
+}
+
 function renderCompare(){
   if(!PERIODS||PERIODS.length<2){
     document.getElementById('compare-content').innerHTML='<div class="empty-state"><div class="e-icon">📊</div><p>Au moins 2 périodes sont nécessaires<br>pour afficher la comparaison.</p></div>';
+    document.getElementById('compare-selectors').style.display='none';
     return;
   }
+
+  populateCompareSelectors();
+
   const sorted=[...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const prev=sorted[sorted.length-2], curr=sorted[sorted.length-1];
+  const sel1 = document.getElementById('compare-sel-p1');
+  const sel2 = document.getElementById('compare-sel-p2');
+
+  const p1id = sel1 ? parseInt(sel1.value) : null;
+  const p2id = sel2 ? parseInt(sel2.value) : null;
+
+  let prev = p1id ? PERIODS.find(p=>p.id===p1id) : sorted[sorted.length-2];
+  let curr = p2id ? PERIODS.find(p=>p.id===p2id) : sorted[sorted.length-1];
+
+  // Fallback si non trouvé
+  if (!prev) prev = sorted[sorted.length-2];
+  if (!curr) curr = sorted[sorted.length-1];
+
+  // Empêcher de comparer une période avec elle-même
+  if (prev.id === curr.id) {
+    document.getElementById('compare-content').innerHTML='<div class="empty-state"><div class="e-icon">⚠️</div><p>Sélectionne deux périodes différentes.</p></div>';
+    return;
+  }
   const c1=prev.cartes||[], i1=prev.items||[];
   const c2=curr.cartes||[], i2=curr.items||[];
   const s1=computeStats(c1,i1), s2=computeStats(c2,i2);
@@ -1377,6 +1436,7 @@ function setTab(name){
   document.querySelector(`.tab[onclick="setTab('${name}')"]`).classList.add('active');
   document.getElementById(`panel-${name}`).classList.add('active');
   if(name==='evolution')renderEvolution();
+  if(name==='compare')renderCompare();
 }
 
 /* ── INIT ── */
