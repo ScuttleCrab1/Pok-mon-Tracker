@@ -368,6 +368,11 @@ body.dark .opp-badge.mod{background:rgba(201,168,76,.12);color:#c9a84c}
 .mobile-tabs::-webkit-scrollbar{display:none}
 .mobile-tab{font-size:13px;padding:11px 16px;color:var(--muted2);white-space:nowrap;flex-shrink:0;border-bottom:2px solid transparent;cursor:pointer}
 .mobile-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── PANELS ── */
+.panel{display:none}
+.panel.active{display:block}
+
 </style>
 </head>
 <body>
@@ -793,11 +798,8 @@ const DATA = {
 const SEED_PERIODS = __SEED_PERIODS__;
 let PERIODS = SEED_PERIODS.length > 0 ? SEED_PERIODS : [
   {
-    id: 1,
-    name: 'Période 1',
-    date: '2025-05-25',
-    cartes: SEED_CARTES,
-    items: SEED_ITEMS,
+    id: 1, name: 'Période 1', date: new Date().toISOString().slice(0,10),
+    cartes: SEED_CARTES, items: SEED_ITEMS,
     totalCartes: SEED_CARTES.reduce((s,c)=>s+c._actuel,0),
     totalItems: SEED_ITEMS.reduce((s,i)=>s+i._actuel,0),
   }
@@ -1281,10 +1283,24 @@ function setPage(name) {
   const titles = { overview:'Synthèse', cartes:'Cartes', scelle:'Scellé',
     evolution:'Évolution', compare:'Comparaison', predictions:'Prédictions' };
   document.getElementById('topbar-title').textContent = titles[name] || name;
+  // Pills topbar pour overview
+  if (name === 'overview') {
+    const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const pills = document.getElementById('topbar-pills');
+    if (pills) {
+      pills.innerHTML = sorted.map((p,i) =>
+        `<span class="tpill ${i===sorted.length-1?'active':''}" onclick="selectOvPeriod(${p.id})">${p.name}</span>`
+      ).join('') + '<span class="tpill" onclick="">Tout</span>';
+    }
+  } else {
+    const pills = document.getElementById('topbar-pills');
+    if (pills) pills.innerHTML = '';
+  }
   // Déclencher rendus
   if (name === 'evolution')    renderEvolution();
   if (name === 'compare')      renderCompare();
   if (name === 'predictions')  renderPredictions();
+  if (name === 'cartes')       renderFeatured();
   if (name === 'cartes')       renderFeatured();
 }
 
@@ -1336,6 +1352,18 @@ function setOvMode(mode) {
   renderOvCompareRows();
 }
 
+
+function selectOvPeriod(id) {
+  const sel = document.getElementById('ov-compare-sel');
+  if (sel) {
+    // Chercher et sélectionner dans le select
+    Array.from(sel.options).forEach(o => {
+      if (parseInt(o.value) === id) sel.value = o.value;
+    });
+    _ovCompareId = id;
+    onOvCompare();
+  }
+}
 function onOvCompare() {
   const sel = document.getElementById('ov-compare-sel');
   _ovCompareId = sel ? parseInt(sel.value) : null;
@@ -1352,11 +1380,16 @@ function renderOverviewFinary(cartes, items) {
 
   // Populate compare selector
   const sel = document.getElementById('ov-compare-sel');
-  if (sel && sorted.length >= 2) {
-    sel.innerHTML = sorted.map(p=>`<option value="${p.id}">${p.name} — ${eur(p.totalCartes+p.totalItems)}</option>`).join('');
+  if (sel) {
     if (sorted.length >= 2) {
+      sel.innerHTML = sorted.map(p=>`<option value="${p.id}">${p.name} — ${eur(p.totalCartes+p.totalItems)}</option>`).join('');
       sel.value = sorted[sorted.length-2].id;
-      _ovCompareId = sorted[sorted.length-2].id;
+      _ovCompareId = parseInt(sel.value);
+      document.getElementById('ov-compare-card').style.display = 'block';
+    } else {
+      sel.innerHTML = '<option>Importez plus de périodes pour comparer</option>';
+      _ovCompareId = null;
+      document.getElementById('ov-compare-card').style.display = 'none';
     }
   }
 
@@ -1383,6 +1416,8 @@ function renderOvChart(sorted, totalNow) {
   opts.scales.y.ticks.callback = v => (v/1000).toFixed(1)+'k €';
   opts.scales.x.ticks.maxRotation = 0;
   opts.scales.x.ticks.maxTicksLimit = 8;
+  opts.maintainAspectRatio = false;
+  opts.maintainAspectRatio = false;
   _ovChart = new Chart(document.getElementById('chart-overview'), {
     type: 'line',
     data: {
@@ -1392,7 +1427,7 @@ function renderOvChart(sorted, totalNow) {
         borderColor: '#f5a623',
         backgroundColor: 'rgba(245,166,35,0.06)',
         pointBackgroundColor: '#f5a623',
-        pointRadius: 4, pointHoverRadius: 6,
+        pointRadius: 5, pointHoverRadius: 7,
         fill: true, tension: .35, borderWidth: 2,
       }]
     },
@@ -1563,13 +1598,14 @@ function renderFeaturedCarte(idx, sorted) {
   if (_featCarteChart) _featCarteChart.destroy();
   const textC = _darkMode?'#4a5568':'#888780';
   const gridC = _darkMode?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+  const featCarteOpts = { maintainAspectRatio: false };
   _featCarteChart = new Chart(document.getElementById('featured-carte-chart'), {
     type:'line',
     data:{ labels:histLabels, datasets:[{
       data:histVals, borderColor:'#f5a623', backgroundColor:'rgba(245,166,35,0.06)',
       pointBackgroundColor:'#f5a623', pointRadius:3, fill:true, tension:.35, borderWidth:1.5,
     }]},
-    options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+eur(ctx.parsed.y)}} },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+eur(ctx.parsed.y)}} },
       scales:{ x:{ticks:{color:textC,font:{size:9}},grid:{color:gridC}}, y:{ticks:{color:textC,font:{size:9},callback:v=>v.toLocaleString('fr-FR',{minimumFractionDigits:0})+' €'},grid:{color:gridC}} } }
   });
 }
@@ -1592,13 +1628,14 @@ function renderFeaturedItem(idx, sorted) {
   if (_featItemChart) _featItemChart.destroy();
   const textC = _darkMode?'#4a5568':'#888780';
   const gridC = _darkMode?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+  const featItemOpts = { maintainAspectRatio: false };
   _featItemChart = new Chart(document.getElementById('featured-item-chart'), {
     type:'line',
     data:{ labels:histLabels, datasets:[{
       data:histVals, borderColor:'#378add', backgroundColor:'rgba(55,138,221,0.06)',
       pointBackgroundColor:'#378add', pointRadius:3, fill:true, tension:.35, borderWidth:1.5,
     }]},
-    options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+eur(ctx.parsed.y)}} },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+eur(ctx.parsed.y)}} },
       scales:{ x:{ticks:{color:textC,font:{size:9}},grid:{color:gridC}}, y:{ticks:{color:textC,font:{size:9},callback:v=>v.toLocaleString('fr-FR',{minimumFractionDigits:0})+' €'},grid:{color:gridC}} } }
   });
 }
@@ -2401,6 +2438,8 @@ function renderAll(){
   renderCartes(c1);
   renderScelle(i1);
   renderPerfTables(c1, i1);
+  renderEvolution();
+  renderFeatured();
   document.getElementById('footer-info').textContent=`${c1.length} cartes · ${i1.length} items`;
   document.getElementById('footer-date').textContent=`Généré le __GEN_DATE__`;
 }
@@ -2435,15 +2474,18 @@ function fixSeedData(cartes, items) {
   PERIODS.forEach(p => {
     (p.cartes||[]).forEach(c => {
       if (!c._key) c._key = `${c['Nom']||''}|${c['Numéro']||''}|${c['Série']||''}|${c['État']||''}|${c['Version']||''}`;
-      if (c._actuel === undefined) c._actuel = parseNum(c['Prix Actuel']);
-      if (c._achat  === undefined) c._achat  = parseNum(c['Prix Achat']);
+      if (c._actuel === undefined || c._actuel === null) c._actuel = parseNum(c['Prix Actuel']);
+      if (c._achat  === undefined || c._achat  === null) c._achat  = parseNum(c['Prix Achat']);
     });
     (p.items||[]).forEach(i => {
       if (!i._key) i._key = `${i['Item']||''}|${i['Série']||''}`;
-      if (i._actuel === undefined) i._actuel = parseNum(i['Prix Actuel']);
-      if (i._achat  === undefined) i._achat  = parseNum(i['Prix Achat']);
-      if (i._gain   === undefined) i._gain   = parseNum(i['Gain Théorique']);
+      if (i._actuel === undefined || i._actuel === null) i._actuel = parseNum(i['Prix Actuel']);
+      if (i._achat  === undefined || i._achat  === null) i._achat  = parseNum(i['Prix Achat']);
+      if (i._gain   === undefined || i._gain   === null) i._gain   = parseNum(i['Gain Théorique']);
     });
+    // Recalculer totalCartes/totalItems si manquants
+    if (!p.totalCartes) p.totalCartes = (p.cartes||[]).reduce((s,c)=>s+(c._actuel||0),0);
+    if (!p.totalItems)  p.totalItems  = (p.items||[]).reduce((s,i)=>s+(i._actuel||0),0);
   });
 }
 fixSeedData(DATA.p1.cartes, DATA.p1.items);
