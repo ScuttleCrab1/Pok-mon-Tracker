@@ -1013,15 +1013,7 @@ function toggleTheme(){
 }
 
 
-  document.getElementById('ticker').innerHTML = `
-    <div class="tick"><span class="tick-name">TOTAL</span><span class="tick-val">${eur(total)}</span>${deltaTicker}</div>
-    <div class="tick"><span class="tick-name">CARTES</span><span class="tick-val">${eur(totalCartes)}</span><span class="tick-up">${cartes.length} cartes</span></div>
-    <div class="tick"><span class="tick-name">SCELLÉ</span><span class="tick-val">${eur(totalItems)}</span><span class="tick-up">${items.length} items</span></div>
-    <div class="tick"><span class="tick-name">GAIN NET</span><span class="tick-val" style="color:${gainItems>=0?'var(--green)':'var(--red)'}">${gainItems>=0?'+':''}${eur(gainItems)}</span><span class="${rendement>=0?'tick-up':'tick-down'}">${rendement>=0?'+':''}${rendement.toFixed(1)}%</span></div>
-    <div class="tick"><span class="tick-name">PÉRIODES</span><span class="tick-val">${PERIODS.length}</span></div>
-  `;
-}
-
+  
 /* ── MARKET TRENDS (coefficients par bloc/série) ── */
 const MARKET_TRENDS = {
   'Appel des Legendes': { annual: 0.12, confidence: 'high' },
