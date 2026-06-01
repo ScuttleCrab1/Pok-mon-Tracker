@@ -577,6 +577,24 @@ body.dark .opp-badge.mod{background:rgba(201,168,76,.12);color:#c9a84c}
               </div>
               <div class="featured-axis-labels" id="featured-item-axis"></div>
             </div>
+            <!-- Performances inter-périodes -->
+            <div class="section-title" style="margin-top:8px">Performances (1ère période → actuel)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+              <div>
+                <div style="font-size:11px;color:var(--green);margin-bottom:8px;font-weight:500">↑ Plus fortes hausses</div>
+                <div class="table-wrap"><div class="table-scroll">
+                  <table><thead><tr><th>#</th><th>Carte</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+                  <tbody id="tbody-cartes-up"></tbody></table>
+                </div></div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--red);margin-bottom:8px;font-weight:500">↓ Plus fortes baisses</div>
+                <div class="table-wrap"><div class="table-scroll">
+                  <table><thead><tr><th>#</th><th>Carte</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
+                  <tbody id="tbody-cartes-down"></tbody></table>
+                </div></div>
+              </div>
+            </div>
             <!-- Toutes les cartes -->
             <div class="section-title" style="margin-top:8px">Toutes les cartes</div>
             <div class="filter-bar">
@@ -967,8 +985,10 @@ function renderPerfTables(cartes, items){
   </tr>`;
 
   const noData='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px;font-size:11px">Aucune donnée</td></tr>';
-  document.getElementById('tbody-cartes-up').innerHTML=topCUp.length?topCUp.map((m,i)=>rowC(m,i,true)).join(''):noData;
-  document.getElementById('tbody-cartes-down').innerHTML=topCDown.length?topCDown.map((m,i)=>rowC(m,i,false)).join(''):noData;
+  const elCU=document.getElementById('tbody-cartes-up');
+  const elCD=document.getElementById('tbody-cartes-down');
+  if(elCU) elCU.innerHTML=topCUp.length?topCUp.map((m,i)=>rowC(m,i,true)).join(''):noData;
+  if(elCD) elCD.innerHTML=topCDown.length?topCDown.map((m,i)=>rowC(m,i,false)).join(''):noData;
 
   // ITEMS — comparer première période vs données courantes
   const map1i=Object.fromEntries((first.items||[]).map(i=>[i._key,i]));
@@ -995,8 +1015,10 @@ function renderPerfTables(cartes, items){
     <td class="tr"><span class="perf-badge ${up?'perf-pos':'perf-neg'}">${up?'+':''}${m.pct.toFixed(1)}%</span></td>
   </tr>`;
 
-  document.getElementById('tbody-items-up').innerHTML=topIUp.length?topIUp.map((m,i)=>rowI(m,i,true)).join(''):noData;
-  document.getElementById('tbody-items-down').innerHTML=topIDown.length?topIDown.map((m,i)=>rowI(m,i,false)).join(''):noData;
+  const elIU=document.getElementById('tbody-items-up');
+  const elID=document.getElementById('tbody-items-down');
+  if(elIU) elIU.innerHTML=topIUp.length?topIUp.map((m,i)=>rowI(m,i,true)).join(''):noData;
+  if(elID) elID.innerHTML=topIDown.length?topIDown.map((m,i)=>rowI(m,i,false)).join(''):noData;
 }
 
 
@@ -1383,7 +1405,8 @@ function renderOverviewFinary(cartes, items) {
   if (sel) {
     if (sorted.length >= 2) {
       sel.innerHTML = sorted.map(p=>`<option value="${p.id}">${p.name} — ${eur(p.totalCartes+p.totalItems)}</option>`).join('');
-      sel.value = sorted[sorted.length-2].id;
+      // Par défaut : comparer vs la première période (référence historique)
+      sel.value = sorted[0].id;
       _ovCompareId = parseInt(sel.value);
       document.getElementById('ov-compare-card').style.display = 'block';
     } else {
@@ -1394,10 +1417,9 @@ function renderOverviewFinary(cartes, items) {
   }
 
   // Ref button
-  if (sorted.length > 0) {
-    const ref = sorted[0];
-    document.getElementById('ov-ref-btn').textContent = `${ref.name} — ${eur(ref.totalCartes+ref.totalItems)}`;
-  }
+  // Le bouton de référence montre la valeur actuelle (DATA.p1)
+  const nowTotal = DATA.p1.cartes.reduce((s,c)=>s+c._actuel,0) + DATA.p1.items.reduce((s,i)=>s+i._actuel,0);
+  document.getElementById('ov-ref-btn').textContent = `Actuel — ${eur(nowTotal)}`;
 
   renderOvChart(sorted, totalNow);
   renderOvDelta();
@@ -1441,7 +1463,9 @@ function renderOvDelta() {
   const cmp = PERIODS.find(p=>p.id===_ovCompareId);
   if (!cmp) { badge.style.display='none'; return; }
   const now = DATA.p1.cartes.reduce((s,c)=>s+c._actuel,0) + DATA.p1.items.reduce((s,i)=>s+i._actuel,0);
-  const prev = cmp.totalCartes + cmp.totalItems;
+  const cmpTC = cmp.totalCartes || (cmp.cartes||[]).reduce((s,c)=>s+(c._actuel||0),0);
+  const cmpTI = cmp.totalItems  || (cmp.items||[]).reduce((s,i)=>s+(i._actuel||0),0);
+  const prev = cmpTC + cmpTI;
   const delta = now - prev;
   badge.style.display = 'inline-block';
   badge.className = `graph-delta-badge ${delta>=0?'pos':'neg'}`;
@@ -1463,8 +1487,11 @@ function renderOvKpis(cartes, items) {
   if (_ovCompareId) {
     const cmp = PERIODS.find(p=>p.id===_ovCompareId);
     if (cmp) {
-      const dc = totalCartes - cmp.totalCartes;
-      const di = totalItems  - cmp.totalItems;
+      // Recalculer totalCartes/totalItems depuis les cartes si manquants
+      const cmpTC = cmp.totalCartes || (cmp.cartes||[]).reduce((s,c)=>s+(c._actuel||parseNum(c['Prix Actuel'])||0),0);
+      const cmpTI = cmp.totalItems  || (cmp.items||[]).reduce((s,i)=>s+(i._actuel||parseNum(i['Prix Actuel'])||0),0);
+      const dc = totalCartes - cmpTC;
+      const di = totalItems  - cmpTI;
       dCartes = `<div class="kpi-delta ${dc>=0?'pos':'neg'}">${dc>=0?'+':''}${eur(dc)}</div>`;
       dItems  = `<div class="kpi-delta ${di>=0?'pos':'neg'}">${di>=0?'+':''}${eur(di)}</div>`;
     }
