@@ -194,9 +194,40 @@ def find_csv_files():
 
 # ── GENERATE HTML ──────────────────────────────────────────────────
 
+def fix_period_data(p):
+    """Recalcule _key, _actuel, _achat sur les données d'une période"""
+    for c in p.get('cartes', []):
+        if not c.get('_key'):
+            c['_key'] = f"{c.get('Nom','')}|{c.get('Numéro','')}|{c.get('Série','')}|{c.get('État','')}|{c.get('Version','')}"
+        if c.get('_actuel') is None:
+            c['_actuel'] = parse_num(c.get('Prix Actuel', 0))
+        if c.get('_achat') is None:
+            c['_achat'] = parse_num(c.get('Prix Achat', 0))
+    for i in p.get('items', []):
+        if not i.get('_key'):
+            i['_key'] = f"{i.get('Item','')}|{i.get('Série','')}"
+        if i.get('_actuel') is None:
+            i['_actuel'] = parse_num(i.get('Prix Actuel', 0))
+        if i.get('_achat') is None:
+            i['_achat'] = parse_num(i.get('Prix Achat', 0))
+        if i.get('_gain') is None:
+            i['_gain'] = parse_num(i.get('Gain Théorique', 0))
+        if i.get('_qte') is None:
+            i['_qte'] = int(i.get('Quantité', 1) or 1)
+        if i.get('_pct') is None:
+            i['_pct'] = round(i['_gain'] / i['_achat'] * 100, 2) if i['_achat'] > 0 else None
+    if not p.get('totalCartes'):
+        p['totalCartes'] = sum(c.get('_actuel', 0) for c in p.get('cartes', []))
+    if not p.get('totalItems'):
+        p['totalItems'] = sum(i.get('_actuel', 0) for i in p.get('items', []))
+
 def generate_html(cartes, items, periods, images):
     with open(TEMPLATE, 'r', encoding='utf-8') as f:
         template = f.read()
+
+    # Recalculer les données manquantes sur toutes les périodes
+    for p in periods:
+        fix_period_data(p)
 
     for c in cartes:
         c['_img'] = images.get(c['_key'])
