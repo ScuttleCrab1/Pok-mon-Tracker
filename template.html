@@ -780,6 +780,7 @@ body.dark .opp-badge.mod{background:rgba(201,168,76,.12);color:#c9a84c}
 
 <script>
 /* ── SEED DATA ── */
+let _darkMode = false;
 const SEED_CARTES = __SEED_CARTES__;
 const SEED_ITEMS  = __SEED_ITEMS__;
 
@@ -998,19 +999,7 @@ function renderPerfTables(cartes, items){
 
 
 
-/* ── THEME TOGGLE ── */
-let _darkMode = true;
-function toggleTheme(){
-  _darkMode = !_darkMode;
-  document.body.classList.toggle('light', !_darkMode);
-  document.getElementById('theme-label-dark').classList.toggle('on', _darkMode);
-  document.getElementById('theme-label-light').classList.toggle('on', !_darkMode);
-  if(chartEvol) { chartEvol.destroy(); chartEvol=null; }
-  if(chartSplit) { chartSplit.destroy(); chartSplit=null; }
-  if(_predChart) { _predChart.destroy(); _predChart=null; }
-  renderEvolution();
-  if(document.getElementById('panel-predictions').classList.contains('active')) renderPredictions();
-}
+
 
 
   
@@ -1303,7 +1292,6 @@ function setPage(name) {
 function setTab(name) { setPage(name); }
 
 /* ── THEME ── */
-let _darkMode = false;
 function toggleTheme() {
   _darkMode = !_darkMode;
   document.body.classList.toggle('dark', _darkMode);
