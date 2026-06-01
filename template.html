@@ -1380,7 +1380,9 @@ function renderOvChart(sorted, totalNow) {
   if (_ovChart) _ovChart.destroy();
   const opts = chartDefaults(v=>eur(v));
   opts.plugins.legend = { display: false };
-  opts.scales.y.ticks.callback = v => v.toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0})+' €';
+  opts.scales.y.ticks.callback = v => (v/1000).toFixed(1)+'k €';
+  opts.scales.x.ticks.maxRotation = 0;
+  opts.scales.x.ticks.maxTicksLimit = 8;
   _ovChart = new Chart(document.getElementById('chart-overview'), {
     type: 'line',
     data: {
@@ -1672,10 +1674,16 @@ function renderTop5(type) {
   if (!el || !data.length) return;
   el.innerHTML = data.map((item,i)=>{
     let delta = 0, pct = 0;
-    if (first) {
+    if (first && PERIODS.length >= 2) {
       const arr = isCartes ? (first.cartes||[]) : (first.items||[]);
       const old = arr.find(x=>x._key===item._key);
       if (old) { delta=item._actuel-old._actuel; pct=old._actuel>0?delta/old._actuel*100:0; }
+    } else if (isCartes && item._achat>0) {
+      delta = item._actuel - item._achat;
+      pct   = delta/item._achat*100;
+    } else if (!isCartes && item._gain) {
+      delta = item._gain;
+      pct   = item._pct||0;
     }
     const val = mode==='eur' ? `${delta>=0?'+':''}${eur(delta)}` : `${pct>=0?'+':''}${pct.toFixed(1)}%`;
     const nom = isCartes ? item['Nom'] : item['Série'];
@@ -1783,22 +1791,8 @@ function computeHealth(cartes, items) {
 }
 
 function renderHealth(cartes, items) {
-  const { score, criteria } = computeHealth(cartes, items);
-  const cls = score >= 75 ? 's-great' : score >= 55 ? 's-good' : score >= 35 ? 's-warn' : 's-bad';
-  const label = score >= 75 ? 'Excellente' : score >= 55 ? 'Bonne' : score >= 35 ? 'À surveiller' : 'En difficulté';
-  const color = score >= 75 ? 'var(--green)' : score >= 55 ? 'var(--gold)' : score >= 35 ? 'var(--orange)' : 'var(--red)';
-
-  document.getElementById('health-num').textContent = score;
-  document.getElementById('health-num').className = 'health-score-num ' + cls;
-  document.getElementById('health-label').textContent = label;
-  document.getElementById('health-sub').textContent = score + '/100';
-  document.getElementById('health-bar').style.cssText = `width:${score}%;background:linear-gradient(90deg,${color}88,${color})`;
-  document.getElementById('health-criteria').innerHTML = criteria.map(c=>`
-    <div class="health-crit">
-      <div class="health-crit-dot" style="background:${c.ok?'var(--green)':'var(--red)'}"></div>
-      <span style="color:var(--muted)">${c.label}</span>
-      <span style="font-family:'DM Mono',monospace;font-size:10px;color:${c.ok?'var(--green)':'var(--red)'}">${c.val}</span>
-    </div>`).join('');
+  // Délégué à renderSideHealth() qui utilise les bons IDs du nouveau design
+  renderSideHealth();
 }
 
 /* ── ALERTES > 5% ── */
@@ -2454,6 +2448,7 @@ function fixSeedData(cartes, items) {
 }
 fixSeedData(DATA.p1.cartes, DATA.p1.items);
 renderAll();
+setPage('overview');
 </script>
 </body>
 </html>
