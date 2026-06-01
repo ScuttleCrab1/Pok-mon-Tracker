@@ -9,302 +9,365 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
+  --bg:#f7f6f3;--s1:#ffffff;--s2:#f3f1ee;--s3:#ebe9e4;
+  --border:#e8e5df;--border2:#d8d4cc;
+  --gold:#f5a623;--gold2:#e8941a;
+  --green:#3B6D11;--green-bg:#EAF3DE;
+  --red:#A32D2D;--red-bg:#FCEBEB;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --text:#1a1a1a;--muted:#888780;--muted2:#5F5E5A;
+  --sidebar-w:220px;
+}
+body.dark{
   --bg:#07080f;--s1:#0d1220;--s2:#111828;--s3:#141928;
-  --border:#141928;--border2:#1e2840;
+  --border:#1e2840;--border2:#2a3550;
   --gold:#c9a84c;--gold2:#8a6820;
-  --green:#48bb78;--red:#f56565;--blue:#378add;--purple:#534ab7;
+  --green:#48bb78;--green-bg:rgba(72,187,120,.12);
+  --red:#f56565;--red-bg:rgba(245,101,101,.12);
+  --blue:#378add;--blue-bg:rgba(55,138,221,.12);
   --text:#e2e8f0;--muted:#4a5568;--muted2:#718096;
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
 
-/* LIGHT MODE */
-body.light{
-  --bg:#f0f2f5;--s1:#ffffff;--s2:#f7f8fa;--s3:#eef0f3;
-  --border:#e2e8f0;--border2:#cbd5e0;
-  --gold:#8a6820;--gold2:#c9a84c;
-  --green:#276749;--red:#7b1d1d;--blue:#1a56a0;--purple:#3c3489;
-  --text:#1a202c;--muted:#718096;--muted2:#4a5568;
-}
+/* ── LAYOUT ── */
+.app-shell{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50}
+.sidebar-logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.sidebar-logo-icon{width:32px;height:32px;border-radius:8px;background:var(--gold);display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;flex-shrink:0}
+.sidebar-logo-text{font-size:15px;font-weight:500;color:var(--text)}
+.sidebar-nav{flex:1;padding:10px 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;color:var(--muted2);cursor:pointer;transition:all .15s;border-left:3px solid transparent;margin:1px 0}
+.nav-item:hover{background:var(--s2);color:var(--text)}
+.nav-item.active{color:var(--gold);background:rgba(245,166,35,.08);border-left-color:var(--gold);font-weight:500}
+.nav-item i{font-size:16px;flex-shrink:0}
+.nav-sep{height:1px;background:var(--border);margin:8px 18px}
+.sidebar-bottom{padding:12px 18px;border-top:1px solid var(--border)}
+.theme-toggle-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted2);cursor:pointer}
+.theme-switch{width:36px;height:20px;background:var(--border2);border-radius:10px;position:relative;transition:background .2s;margin-left:auto}
+.theme-switch.on{background:var(--gold)}
+.theme-switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+.theme-switch.on::after{left:18px}
 
-/* HEADER */
-.app-header{position:relative;z-index:10;padding:14px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
-.logo h1{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:var(--gold)}
-.logo span{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-left:10px}
-.header-right{display:flex;align-items:center;gap:10px}
-.p1-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;padding:4px 10px;border-radius:4px;background:var(--s1);border:1px solid var(--border2);color:var(--gold)}
+.main-area{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--s1);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:40}
+.topbar-left{display:flex;align-items:center;gap:8px}
+.topbar-title{font-size:17px;font-weight:500;color:var(--text)}
+.topbar-chevron{font-size:14px;color:var(--muted)}
+.topbar-pills{display:flex;gap:6px}
+.tpill{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);color:var(--muted2);background:var(--s1);cursor:pointer;transition:all .15s}
+.tpill:hover{border-color:var(--gold);color:var(--gold)}
+.tpill.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.page-body{flex:1;padding:24px 28px;background:var(--bg)}
 
-/* TICKER */
-.ticker{background:var(--s1);border-bottom:1px solid var(--border);padding:7px 28px;display:flex;gap:24px;overflow-x:auto}
-.ticker::-webkit-scrollbar{display:none}
-.tick{display:flex;align-items:center;gap:8px;flex-shrink:0}
-.tick-name{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:0.5px}
-.tick-val{font-size:11px;font-weight:500;color:var(--text)}
-.tick-up{font-size:10px;color:var(--green)}
-.tick-down{font-size:10px;color:var(--red)}
+/* ── FINARY OVERVIEW LAYOUT ── */
+.finary-grid{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
+.finary-main{display:flex;flex-direction:column;gap:16px}
+.finary-side{display:flex;flex-direction:column;gap:16px}
 
-/* DARK/LIGHT TOGGLE */
-.theme-toggle{display:flex;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;cursor:pointer;user-select:none}
-.theme-toggle span{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px}
-.theme-toggle span.on{color:var(--gold)}
-.theme-dot{width:14px;height:14px;border-radius:50%;background:var(--gold);flex-shrink:0}
+/* ── GRAPH CARD ── */
+.graph-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px}
+.graph-date{font-size:12px;color:var(--muted);margin-bottom:4px}
+.graph-total{font-size:32px;font-weight:500;color:var(--text);margin-bottom:4px}
+.graph-delta-badge{display:inline-block;font-size:12px;padding:3px 9px;border-radius:6px;margin-bottom:14px}
+.graph-delta-badge.pos{background:var(--green-bg);color:var(--green)}
+.graph-delta-badge.neg{background:var(--red-bg);color:var(--red)}
+.graph-chart-wrap{position:relative;height:160px;margin-bottom:14px}
+.graph-chart-wrap canvas{width:100%!important;height:160px!important}
+.graph-period-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.period-ref-btn{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid var(--gold);color:var(--gold);background:transparent;cursor:pointer;font-weight:500}
+.period-compare-btn{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);color:var(--muted2);background:var(--s1);cursor:pointer}
+.period-compare-sel{font-size:12px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);color:var(--text);background:var(--s1);outline:none;cursor:pointer;flex:1}
 
-/* MAIN */
-#dashboard{position:relative;z-index:10;padding:20px 28px}
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.kpi-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.kpi-value{font-size:20px;font-weight:500;color:var(--text);margin-bottom:3px}
+.kpi-delta{font-size:12px}
+.kpi-delta.pos{color:var(--green)}.kpi-delta.neg{color:var(--red)}.kpi-delta.neu{color:var(--muted)}
 
-/* TABS */
-.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
-.tab{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:10px 16px;cursor:pointer;color:var(--muted);transition:all .15s;border:none;background:transparent;border-bottom:2px solid transparent;margin-bottom:-1px}
-.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
-.tab:hover{color:var(--text)}
-.panel{display:none}.panel.active{display:block}
+/* ── COMPARE CARD ── */
+.compare-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px}
+.compare-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.compare-card-title{font-size:13px;color:var(--muted2)}
+.eur-pct-toggle{display:flex;background:var(--s2);border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.eur-pct-toggle button{font-size:11px;padding:3px 10px;border:none;background:transparent;color:var(--muted);cursor:pointer}
+.eur-pct-toggle button.on{background:var(--gold);color:#fff;border-radius:4px}
+.compare-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.compare-row:last-child{border-bottom:none}
+.compare-name{font-size:13px;color:var(--text)}
+.compare-vals{display:flex;align-items:center;gap:8px}
+.compare-prev{font-size:12px;color:var(--muted)}
+.compare-curr{font-size:13px;font-weight:500;color:var(--text)}
+.delta-badge{font-size:11px;padding:2px 7px;border-radius:5px}
+.delta-pos{background:var(--green-bg);color:var(--green)}
+.delta-neg{background:var(--red-bg);color:var(--red)}
 
-/* GRIDS */
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
-@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:640px){.g4,.g3,.g2{grid-template-columns:1fr}.tabs{overflow-x:auto}.tab{font-size:8px;padding:8px 10px}.app-header{padding:12px 16px}#dashboard{padding:16px}}
+/* ── SIDE CARDS ── */
+.side-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px}
+.side-card-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.side-card-sub{font-size:11px;color:var(--muted);margin-bottom:12px}
 
-/* KPI CARDS */
-.kpi-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.kpi-card.c-gold::before{background:var(--gold)}
-.kpi-card.c-blue::before{background:var(--blue)}
-.kpi-card.c-purple::before{background:var(--purple)}
-.kpi-card.c-green::before{background:var(--green)}
-.kpi-card.c-red::before{background:var(--red)}
-.kpi-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px}
-.kpi-val{font-size:24px;font-weight:500;color:var(--text);line-height:1;margin-bottom:4px}
-.kpi-val.gold{color:var(--gold)}
-.kpi-sub{font-size:11px;color:var(--muted)}
-.kpi-delta{font-family:'DM Mono',monospace;font-size:10px;margin-top:3px}
-.kpi-delta.up{color:var(--green)}.kpi-delta.down{color:var(--red)}
+/* ── HEALTH ── */
+.health-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.health-circle{width:48px;height:48px;border-radius:50%;border:3px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500;color:var(--gold);flex-shrink:0}
+.hbar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.hbar-label{font-size:11px;color:var(--muted2);width:64px;flex-shrink:0}
+.hbar-track{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.hbar-fill{height:100%;border-radius:3px;background:var(--gold)}
+.hbar-val{font-size:11px;color:var(--muted2);width:32px;text-align:right;flex-shrink:0}
 
-/* MOVERS */
-.movers-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px}
-.movers-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.movers-title{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px}
-.movers-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.movers-col-title{font-size:9px;letter-spacing:1px;margin-bottom:8px;display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace}
-.movers-col-title.up{color:var(--green)}.movers-col-title.down{color:var(--red)}
-.mover-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)}
-.mover-row:last-child{border-bottom:none}
-.mover-name{font-size:10px;color:var(--muted2);width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mover-bar-wrap{flex:1;height:3px;background:var(--s3);border-radius:2px;overflow:hidden}
-.mover-bar{height:100%;border-radius:2px}
-.mover-val{font-size:10px;font-weight:500;width:38px;text-align:right;flex-shrink:0;font-family:'DM Mono',monospace}
-.mover-val.up{color:var(--green)}.mover-val.down{color:var(--red)}
+/* ── PLUSVALUE CARD ── */
+.plusval-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px}
+.plusval-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.plusval-val{font-size:28px;font-weight:500;margin-bottom:4px}
+.plusval-desc{font-size:11px;color:var(--muted);line-height:1.5}
 
-/* SECTION TITLE */
-.section-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;margin-top:4px;display:flex;align-items:center;gap:10px}
-.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+/* ── PRED SIDE CARD ── */
+.pred-side-label{font-size:12px;color:var(--muted);margin-bottom:4px}
+.pred-side-val{font-size:22px;font-weight:500;color:var(--text);margin-bottom:4px}
+.pred-side-range{font-size:11px;color:var(--muted)}
 
-/* CARD */
-.card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px}
+/* ── CARTES PAGE ── */
+.cartes-grid{display:grid;grid-template-columns:1fr 200px;gap:20px;align-items:start}
+.cartes-main{display:flex;flex-direction:column;gap:14px}
+.cartes-side{display:flex;flex-direction:column;gap:14px}
+.search-wrap{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.search-wrap i{font-size:16px;color:var(--muted);flex-shrink:0}
+.search-wrap input{background:none;border:none;outline:none;font-size:13px;color:var(--text);flex:1;width:100%}
+.featured-wrap{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px}
+.featured-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.featured-header-label{font-size:12px;color:var(--muted)}
+.featured-pause{font-size:13px;color:var(--muted);cursor:pointer}
+.featured-body{display:flex;gap:14px;margin-bottom:14px}
+.featured-img{width:70px;height:98px;border-radius:8px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.featured-info{flex:1}
+.featured-name{font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px}
+.featured-serie{font-size:11px;color:var(--muted);margin-bottom:10px}
+.featured-kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fkpi{background:var(--s2);border-radius:8px;padding:8px 10px}
+.fkpi-l{font-size:10px;color:var(--muted);margin-bottom:3px}
+.fkpi-v{font-size:14px;font-weight:500;color:var(--text)}
+.featured-chart{position:relative;height:80px;margin-bottom:6px;border-left:1px solid var(--border);border-bottom:1px solid var(--border);padding-left:4px}
+.featured-chart canvas{width:100%!important;height:80px!important}
+.featured-axis-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:2px}
 
-/* TABLES */
-.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}
+/* ── TOP5 SIDE ── */
+.top5-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:14px}
+.top5-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.top5-title{font-size:13px;font-weight:500;color:var(--text)}
+.top5-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.top5-row:hover{background:var(--s2);margin:0 -4px;padding:6px 4px;border-radius:6px}
+.top5-row:last-child{border-bottom:none}
+.top5-rank{font-size:13px;font-weight:500;color:var(--gold);width:16px;text-align:center;flex-shrink:0}
+.top5-name{flex:1;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top5-val{font-size:12px;font-weight:500;color:var(--text);flex-shrink:0}
+.top5-delta{font-size:11px;padding:1px 6px;border-radius:4px;flex-shrink:0;margin-left:4px}
+
+/* ── TABLES ── */
+.table-wrap{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px}
 .table-scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-th{padding:8px 12px;text-align:left;font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);background:var(--s2);white-space:nowrap;cursor:pointer}
+th{padding:9px 14px;text-align:left;font-size:11px;color:var(--muted);background:var(--s2);white-space:nowrap;border-bottom:1px solid var(--border);font-weight:400;letter-spacing:.3px;cursor:pointer}
 th:hover{color:var(--text)}
-td{padding:9px 12px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(201,168,76,.03)}
-.td-name{font-weight:500;font-size:13px}.td-sub{font-size:10px;color:var(--muted);margin-top:2px}
-.rank{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold)}
+tr:hover td{background:rgba(245,166,35,.03)}
+.td-name{font-weight:500;font-size:13px;color:var(--text)}.td-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.rank-num{font-size:13px;font-weight:500;color:var(--gold)}
 .mono{font-family:'DM Mono',monospace;font-size:11px}.tr{text-align:right}
 
-/* TAGS */
-.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
-.t-mint{background:rgba(72,187,120,.12);color:var(--green)}
-.t-exc{background:rgba(55,138,221,.12);color:var(--blue)}
-.t-vg{background:rgba(83,74,183,.12);color:var(--purple)}
-.t-good{background:rgba(201,168,76,.12);color:var(--gold)}
-.t-played{background:rgba(245,101,101,.12);color:var(--red)}
-.t-poor{background:rgba(245,101,101,.2);color:var(--red)}
-.t-etb{background:rgba(55,138,221,.12);color:var(--blue)}
-.t-coffret{background:rgba(201,168,76,.12);color:var(--gold)}
-.t-upc{background:rgba(83,74,183,.12);color:var(--purple)}
-.t-minitin{background:rgba(72,187,120,.12);color:var(--green)}
-.t-other{background:rgba(74,85,104,.12);color:var(--muted2)}
+/* ── TAGS ── */
+.tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:400}
+.t-mint{background:var(--green-bg);color:var(--green)}
+.t-exc{background:var(--blue-bg);color:var(--blue)}
+.t-vg{background:#F5EDF8;color:#6B2F8A}
+.t-good{background:#FEF3E2;color:#8A5A0A}
+.t-played{background:var(--red-bg);color:var(--red)}
+.t-poor{background:var(--red-bg);color:var(--red)}
+.t-etb{background:var(--blue-bg);color:var(--blue)}
+.t-coffret{background:#FEF3E2;color:#8A5A0A}
+.t-upc{background:#F5EDF8;color:#6B2F8A}
+.t-minitin{background:var(--green-bg);color:var(--green)}
+.t-other{background:var(--s2);color:var(--muted2)}
+body.dark .t-vg{background:rgba(155,109,255,.12);color:#9b6dff}
+body.dark .t-good{background:rgba(201,168,76,.12);color:#c9a84c}
 
-/* BAR CHART */
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.bar-lbl{width:160px;font-size:11px;color:var(--muted2);text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;height:20px;background:var(--s2);border-radius:3px;overflow:hidden}
-.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-size:10px;font-family:'DM Mono',monospace;color:#000;font-weight:500;min-width:4px}
+/* ── BAR CHART ── */
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-lbl{width:150px;font-size:11px;color:var(--muted2);text-align:right;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:18px;background:var(--s2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-size:10px;color:#fff;font-weight:500;min-width:4px}
 
-/* HIGHLIGHT CARDS */
-.hl-card{border-radius:8px;padding:16px}
-.hl-gold{background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2)}
-.hl-green{background:rgba(72,187,120,.07);border:1px solid rgba(72,187,120,.2)}
-.hl-red{background:rgba(245,101,101,.07);border:1px solid rgba(245,101,101,.2)}
-.hl-blue{background:rgba(55,138,221,.07);border:1px solid rgba(55,138,221,.2)}
-.hl-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:6px}
-.hl-value{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;line-height:1.2}
-.hl-sub{font-size:11px;color:var(--muted2);margin-top:6px;line-height:1.5}
+/* ── PERF BADGES ── */
+.perf-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px}
+.perf-pos{background:var(--green-bg);color:var(--green)}
+.perf-neg{background:var(--red-bg);color:var(--red)}
 
-/* PERF BADGES */
-.perf-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px}
-.perf-pos{background:rgba(72,187,120,.12);color:var(--green)}
-.perf-neg{background:rgba(245,101,101,.12);color:var(--red)}
-
-/* COMPARE */
-.compare-header{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-.period-label{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px}
-.period-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.period-dot.p1{background:var(--blue)}.period-dot.p2{background:var(--gold)}
-.period-text{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted2)}
-.period-text strong{color:var(--text);font-size:12px;display:block;margin-bottom:2px}
-.change-up{color:var(--green);font-family:'DM Mono',monospace;font-size:11px}
-.change-down{color:var(--red);font-family:'DM Mono',monospace;font-size:11px}
-.change-new{color:var(--purple);font-family:'DM Mono',monospace;font-size:11px}
-.change-gone{color:var(--muted);font-family:'DM Mono',monospace;font-size:11px}
-
-/* EVOLUTION */
-.chart-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
-.chart-card canvas{max-height:280px}
-.period-manager{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
-.period-list{display:flex;flex-direction:column;gap:8px;margin-bottom:0}
-.period-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--s2);border-radius:6px;border:1px solid var(--border)}
+/* ── EVOLUTION ── */
+.chart-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.chart-card canvas{max-height:260px}
+.period-manager{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.period-list{display:flex;flex-direction:column;gap:8px}
+.period-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--s2);border-radius:8px;border:1px solid var(--border)}
 .period-row-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.period-row-name{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;flex:1;color:var(--text)}
-.period-row-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)}
-.period-row-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)}
-.period-row-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 6px;border-radius:4px;transition:color .15s}
+.period-row-name{font-size:12px;font-weight:500;flex:1;color:var(--text)}
+.period-row-val{font-size:12px;color:var(--gold);font-family:'DM Mono',monospace}
+.period-row-date{font-size:11px;color:var(--muted)}
+.period-row-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 6px;border-radius:4px}
 .period-row-del:hover{color:var(--red)}
-.top10-toggle{display:flex;gap:6px;margin-bottom:14px}
-.toggle-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;padding:5px 14px;border-radius:4px;border:1px solid var(--border2);background:var(--s2);color:var(--muted);cursor:pointer;transition:all .15s;text-transform:uppercase}
-.toggle-btn.active{background:var(--s3);color:var(--gold);border-color:var(--gold)}
+.top10-toggle{display:flex;gap:8px;margin-bottom:14px}
+.toggle-btn{font-size:12px;padding:6px 16px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--muted2);cursor:pointer;transition:all .15s}
+.toggle-btn.active{background:var(--gold);color:#fff;border-color:var(--gold)}
 
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
 .modal-overlay.open{display:flex}
-.modal-box{background:var(--s1);border:1px solid var(--border2);border-radius:12px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
-.modal-close{position:absolute;top:14px;right:14px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--muted2);font-size:16px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:1}
+.modal-box{background:var(--s1);border:1px solid var(--border);border-radius:16px;max-width:660px;width:100%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--muted2);font-size:16px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .modal-close:hover{color:var(--red);border-color:var(--red)}
 .modal-inner{padding:24px}
-.modal-top{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px}
-.modal-img-wrap{width:160px;flex-shrink:0;border-radius:8px;overflow:hidden;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;min-height:220px}
-.modal-img-wrap img{width:100%;border-radius:8px}
+.modal-top{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.modal-img-wrap{width:150px;flex-shrink:0;border-radius:10px;overflow:hidden;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;min-height:210px}
+.modal-img-wrap img{width:100%;border-radius:10px}
 .modal-info{flex:1;min-width:180px}
-.modal-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:var(--gold);line-height:1;margin-bottom:4px}
-.modal-serie{font-size:12px;color:var(--muted2);margin-bottom:14px}
+.modal-name{font-size:22px;font-weight:500;color:var(--text);margin-bottom:3px}
+.modal-serie{font-size:12px;color:var(--muted);margin-bottom:14px}
 .modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.modal-stat{background:var(--s2);border-radius:6px;padding:9px 12px}
-.modal-stat-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:4px}
-.modal-stat-value{font-family:'Bebas Neue',sans-serif;font-size:20px}
-.modal-volatility{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:4px;font-family:'DM Mono',monospace;font-size:9px;margin-top:6px}
-.vol-low{background:rgba(72,187,120,.12);color:var(--green)}
-.vol-med{background:rgba(201,168,76,.12);color:var(--gold)}
-.vol-high{background:rgba(245,101,101,.12);color:var(--red)}
-.vol-dot{display:inline-block;width:7px;height:7px;border-radius:50%}
-.modal-chart-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
-.modal-chart-wrap{background:var(--s2);border-radius:8px;padding:14px}
-.modal-chart-wrap canvas{max-height:160px}
-
-/* EXT LINKS */
+.modal-stat{background:var(--s2);border-radius:8px;padding:9px 12px}
+.modal-stat-label{font-size:10px;color:var(--muted);margin-bottom:3px}
+.modal-stat-value{font-size:18px;font-weight:500;color:var(--text)}
+.modal-volatility{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:5px;font-size:11px;margin-top:6px}
+.vol-low{background:var(--green-bg);color:var(--green)}
+.vol-med{background:#FEF3E2;color:#8A5A0A}
+.vol-high{background:var(--red-bg);color:var(--red)}
+body.dark .vol-med{background:rgba(201,168,76,.12);color:#c9a84c}
+.modal-chart-title{font-size:11px;color:var(--muted);margin-bottom:8px}
+.modal-chart-wrap{background:var(--s2);border-radius:8px;padding:12px}
+.modal-chart-wrap canvas{max-height:150px}
 .ext-links{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.ext-link{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.5px;text-decoration:none;transition:all .15s;font-weight:500}
-.ext-link-ebay{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold)}
-.ext-link-ebay:hover{background:rgba(201,168,76,.2)}
-.ext-link-cm{background:rgba(72,187,120,.1);border:1px solid rgba(72,187,120,.3);color:var(--green)}
-.ext-link-cm:hover{background:rgba(72,187,120,.2)}
+.ext-link{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;font-size:12px;text-decoration:none;transition:all .15s;border:1px solid var(--border)}
+.ext-link-ebay{color:#8A5A0A;background:#FEF3E2}
+.ext-link-ebay:hover{background:#fde8bc}
+.ext-link-cm{color:var(--green);background:var(--green-bg)}
+.ext-link-cm:hover{filter:brightness(.95)}
 
-/* SORT ARROWS */
-.sort-arrow{font-size:9px;margin-left:4px;color:var(--muted)}
-
-/* HEALTH */
-.health-bar-wrap{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
-.health-score-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.health-score-num{font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:1;flex-shrink:0}
-.health-score-num.s-great{color:var(--green)}.health-score-num.s-good{color:var(--gold)}.health-score-num.s-warn{color:var(--orange)}.health-score-num.s-bad{color:var(--red)}
-.health-score-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:6px}
-.health-bar-track{flex:1;min-width:160px;height:8px;background:var(--s2);border-radius:4px;overflow:hidden}
-.health-bar-fill{height:100%;border-radius:4px;transition:width .8s}
-.health-criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.health-crit{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:11px;display:flex;align-items:center;gap:7px}
-.health-crit-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-
-/* ALERTS */
-.alert-band{background:rgba(245,101,101,.06);border:1px solid rgba(245,101,101,.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:none}
+/* ── ALERTS ── */
+.alert-band{background:#FEF3E2;border:1px solid #f0c060;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:none}
 .alert-band.visible{display:block}
-.alert-band-title{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--red);margin-bottom:8px}
+body.dark .alert-band{background:rgba(201,168,76,.08);border-color:rgba(201,168,76,.3)}
+.alert-band-title{font-size:12px;font-weight:500;color:#8A5A0A;margin-bottom:8px}
+body.dark .alert-band-title{color:#c9a84c}
 .alert-list{display:flex;flex-direction:column;gap:5px}
 .alert-item{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted2)}
 .alert-item-name{font-weight:500;color:var(--text);flex:1}
-.alert-item-pct{font-family:'DM Mono',monospace;font-size:11px}
+.alert-item-pct{font-size:11px}
 
-/* PREDICTIONS */
-.pred-disclaimer{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;display:flex;align-items:flex-start;gap:8px;margin-top:8px}
-.pred-disclaimer-text{font-size:10px;color:var(--muted);line-height:1.6}
-.horizon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
-.horizon-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:12px 14px;text-align:center;position:relative;overflow:hidden}
-.horizon-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.horizon-card.h30::before{background:var(--blue)}
-.horizon-card.h1a::before{background:var(--gold)}
-.horizon-card.h5a::before{background:var(--purple)}
-.horizon-card.h10a::before{background:var(--green)}
-.horizon-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+/* ── HEALTH ── */
+.health-bar-wrap{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.health-score-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.health-score-num{font-size:48px;line-height:1;flex-shrink:0;font-weight:500}
+.health-score-num.s-great{color:var(--green)}.health-score-num.s-good{color:var(--gold)}.health-score-num.s-warn{color:#E8941A}.health-score-num.s-bad{color:var(--red)}
+.health-score-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.health-bar-track{flex:1;min-width:120px;height:6px;background:var(--s3);border-radius:3px;overflow:hidden}
+.health-bar-fill{height:100%;border-radius:3px;transition:width .8s}
+.health-criteria{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.health-crit{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;display:flex;align-items:center;gap:6px;color:var(--muted2)}
+.health-crit-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── PREDICTIONS ── */
+.horizon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.horizon-card{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.horizon-card.h30{border-top:3px solid #378add}
+.horizon-card.h1a{border-top:3px solid var(--gold)}
+.horizon-card.h5a{border-top:3px solid #6B2F8A}
+.horizon-card.h10a{border-top:3px solid var(--green)}
+.horizon-label{font-size:11px;color:var(--muted);margin-bottom:5px}
 .horizon-val{font-size:18px;font-weight:500;color:var(--text);margin-bottom:3px}
-.horizon-delta{font-family:'DM Mono',monospace;font-size:10px}
-.horizon-range{font-size:9px;color:var(--muted);margin-top:4px}
-.horizon-conf{font-size:9px;margin-top:5px;padding:2px 8px;border-radius:4px;display:inline-block;font-family:'DM Mono',monospace}
-.conf-high{background:rgba(72,187,120,.12);color:var(--green)}
-.conf-med{background:rgba(201,168,76,.12);color:var(--gold)}
-.conf-low{background:rgba(245,101,101,.12);color:var(--red)}
+.horizon-delta{font-size:11px;margin-bottom:3px}
+.horizon-range{font-size:10px;color:var(--muted)}
+.pred-disclaimer{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:flex-start;gap:8px;margin-top:8px}
+.pred-disclaimer-text{font-size:11px;color:var(--muted);line-height:1.6}
 .opp-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
 .opp-row:last-child{border-bottom:none}
-.opp-rank{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);width:20px;text-align:center;flex-shrink:0}
+.opp-rank{font-size:16px;font-weight:500;color:var(--gold);width:18px;text-align:center;flex-shrink:0}
 .opp-info{flex:1}
-.opp-name{font-size:12px;font-weight:500;color:var(--text)}
+.opp-name{font-size:13px;font-weight:500;color:var(--text)}
 .opp-sub{font-size:10px;color:var(--muted);margin-top:1px}
-.opp-badge{font-size:9px;padding:2px 8px;border-radius:4px;flex-shrink:0;font-family:'DM Mono',monospace}
-.opp-badge.strong{background:rgba(72,187,120,.12);color:var(--green)}
-.opp-badge.mod{background:rgba(201,168,76,.12);color:var(--gold)}
-.opp-badge.weak{background:rgba(245,101,101,.12);color:var(--red)}
+.opp-badge{font-size:10px;padding:2px 8px;border-radius:5px;flex-shrink:0}
+.opp-badge.strong{background:var(--green-bg);color:var(--green)}
+.opp-badge.mod{background:#FEF3E2;color:#8A5A0A}
+.opp-badge.weak{background:var(--red-bg);color:var(--red)}
+body.dark .opp-badge.mod{background:rgba(201,168,76,.12);color:#c9a84c}
 .opp-horizons{display:flex;gap:5px;flex-shrink:0}
-.opp-h{font-size:9px;padding:3px 7px;border-radius:4px;background:var(--s2);color:var(--muted);text-align:center;min-width:38px;font-family:'DM Mono',monospace}
-.opp-h div{font-size:8px;color:var(--muted);margin-bottom:1px}
-.opp-h span{display:block}
-.opp-h.pos{background:rgba(72,187,120,.1)}
-.opp-h.pos span{color:var(--green)}
-.opp-h.neg{background:rgba(245,101,101,.1)}
-.opp-h.neg span{color:var(--red)}
-.toggle-eur-pct{display:flex;background:var(--s2);border:1px solid var(--border2);border-radius:20px;overflow:hidden}
-.toggle-eur-pct button{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;padding:4px 12px;border:none;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
-.toggle-eur-pct button.on{background:var(--gold);color:var(--bg);font-weight:500}
+.opp-h{font-size:10px;padding:3px 8px;border-radius:5px;background:var(--s2);color:var(--muted);text-align:center;min-width:40px}
+.opp-h div{font-size:9px;color:var(--muted);margin-bottom:1px}
+.opp-h.pos{background:var(--green-bg)}.opp-h.pos span{color:var(--green);display:block}
+.opp-h.neg{background:var(--red-bg)}.opp-h.neg span{color:var(--red);display:block}
+.toggle-eur-pct{display:flex;background:var(--s2);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.toggle-eur-pct button{font-size:11px;padding:4px 12px;border:none;background:transparent;color:var(--muted);cursor:pointer}
+.toggle-eur-pct button.on{background:var(--gold);color:#fff;border-radius:4px}
 
-/* FILTERS */
-.filter-bar{margin-bottom:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.filter-input{background:var(--s1);border:1px solid var(--border2);border-radius:6px;padding:7px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;width:220px;outline:none}
-.filter-select{background:var(--s1);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;color:var(--muted2);font-family:'DM Mono',monospace;font-size:10px;outline:none}
-.filter-select:focus,.filter-input:focus{border-color:var(--gold)}
+/* ── COMPARE ── */
+.section-title{font-size:13px;font-weight:500;color:var(--muted2);margin-bottom:12px;margin-top:4px;display:flex;align-items:center;gap:10px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.compare-header-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.period-label{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.period-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.period-text{font-size:12px;color:var(--muted2)}
+.period-text strong{color:var(--text);font-size:13px;display:block;margin-bottom:2px}
+.change-up{color:var(--green);font-size:12px}
+.change-down{color:var(--red);font-size:12px}
+.change-new{color:#6B2F8A;font-size:12px}
+.change-gone{color:var(--muted);font-size:12px}
 
-/* FORM */
+/* ── SORT ── */
+.filter-bar{margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-input{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;width:220px;outline:none}
+.filter-input:focus{border-color:var(--gold)}
+.filter-select{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--muted2);font-size:12px;outline:none}
+.filter-select:focus{border-color:var(--gold)}
 .form-group{display:flex;flex-direction:column;gap:5px}
-.form-label{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted)}
+.form-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
 
-/* EMPTY */
-.empty-state{text-align:center;padding:50px 20px;color:var(--muted)}
-.empty-state .e-icon{font-size:40px;margin-bottom:14px;opacity:.4}
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-state .e-icon{font-size:36px;margin-bottom:12px;opacity:.4}
 .empty-state p{font-size:13px;line-height:1.6}
 
-/* FOOTER */
-.app-footer{position:relative;z-index:10;padding:14px 28px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+/* ── FOOTER ── */
+.app-footer{padding:14px 28px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;background:var(--s1)}
 
-/* MOBILE */
-@media(max-width:640px){
-  .movers-grid{grid-template-columns:1fr}
-  .compare-header{grid-template-columns:1fr}
-  .modal-box{border-radius:10px;max-height:95vh}
-  .modal-top{flex-direction:column}
-  .modal-img-wrap{width:100%;min-height:180px}
+/* ── VOL DOT ── */
+.vol-dot{display:inline-block;width:7px;height:7px;border-radius:50%}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main-area{margin-left:0}
+  .finary-grid{grid-template-columns:1fr}
+  .finary-side{display:none}
+  .cartes-grid{grid-template-columns:1fr}
+  .cartes-side{display:none}
+  .kpi-row{grid-template-columns:1fr 1fr}
   .horizon-grid{grid-template-columns:repeat(2,1fr)}
+  .page-body{padding:16px}
+  .topbar{padding:12px 16px}
+  .topbar-pills{display:none}
   .opp-horizons{display:none}
+  .mobile-nav{display:flex!important}
+  .mobile-tabs{display:flex!important}
 }
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--s1);border-top:1px solid var(--border);z-index:50;padding:8px 0 12px}
+.mobile-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0}
+.mobile-nav-item i{font-size:20px;color:var(--muted)}
+.mobile-nav-item span{font-size:9px;color:var(--muted)}
+.mobile-nav-item.active i,.mobile-nav-item.active span{color:var(--gold)}
+.mobile-tabs{display:none;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--s1)}
+.mobile-tabs::-webkit-scrollbar{display:none}
+.mobile-tab{font-size:13px;padding:11px 16px;color:var(--muted2);white-space:nowrap;flex-shrink:0;border-bottom:2px solid transparent;cursor:pointer}
+.mobile-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -318,245 +381,398 @@ tr:hover td{background:rgba(201,168,76,.03)}
   </div>
 </div>
 
-<header class="app-header">
-  <div class="logo">
-    <h1>PKM Tracker</h1>
-    <span>Collection Dashboard</span>
-  </div>
-  <div class="header-right">
-    <span class="p1-badge" id="period-badge">PÉRIODE 1</span>
-    <div class="theme-toggle" onclick="toggleTheme()" id="theme-toggle">
-      <div class="theme-dot" id="theme-dot"></div>
-      <span id="theme-label-dark" class="on">Dark</span>
-      <span style="color:var(--muted)">/</span>
-      <span id="theme-label-light">Light</span>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon"><i class="ti ti-cards" aria-hidden="true"></i></div>
+      <span class="sidebar-logo-text">PKM Tracker</span>
     </div>
-  </div>
-</header>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="setPage('overview')" id="nav-overview">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Synthèse
+      </div>
+      <div class="nav-item" onclick="setPage('cartes')" id="nav-cartes">
+        <i class="ti ti-cards" aria-hidden="true"></i> Cartes
+      </div>
+      <div class="nav-item" onclick="setPage('scelle')" id="nav-scelle">
+        <i class="ti ti-package" aria-hidden="true"></i> Scellé
+      </div>
+      <div class="nav-sep"></div>
+      <div class="nav-item" onclick="setPage('evolution')" id="nav-evolution">
+        <i class="ti ti-chart-line" aria-hidden="true"></i> Évolution
+      </div>
+      <div class="nav-item" onclick="setPage('compare')" id="nav-compare">
+        <i class="ti ti-git-compare" aria-hidden="true"></i> Comparaison
+      </div>
+      <div class="nav-item" onclick="setPage('predictions')" id="nav-predictions">
+        <i class="ti ti-trending-up" aria-hidden="true"></i> Prédictions
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="theme-toggle-row" onclick="toggleTheme()">
+        <i class="ti ti-sun" aria-hidden="true"></i>
+        <span id="theme-label">Thème clair</span>
+        <div class="theme-switch" id="theme-switch"></div>
+      </div>
+    </div>
+  </aside>
 
-<div class="ticker" id="ticker"></div>
+  <!-- MAIN -->
+  <div class="main-area">
 
-<main id="dashboard">
-  <div class="tabs">
-    <button class="tab active" onclick="setTab('overview')">Vue d'ensemble</button>
-    <button class="tab" onclick="setTab('cartes')">Cartes</button>
-    <button class="tab" onclick="setTab('scelle')">Scellé</button>
-    <button class="tab" onclick="setTab('compare')">Comparaison</button>
-    <button class="tab" onclick="setTab('evolution')">Évolution</button>
-    <button class="tab" onclick="setTab('predictions')">Prédictions</button>
-  </div>
+    <!-- TOPBAR -->
+    <div class="topbar" id="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title" id="topbar-title">Synthèse</span>
+        <i class="ti ti-chevron-down topbar-chevron" aria-hidden="true"></i>
+      </div>
+      <div class="topbar-pills" id="topbar-pills"></div>
+    </div>
 
-  <!-- OVERVIEW -->
-  <div class="panel active" id="panel-overview">
-    <div class="section-title">Vue d'ensemble</div>
-    <div class="g2" style="margin-bottom:20px">
-      <div class="health-bar-wrap">
-        <div class="health-score-label">Score de santé</div>
-        <div class="health-score-row">
-          <div class="health-score-num" id="health-num">—</div>
-          <div style="flex:1">
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-              <span style="font-size:12px;color:var(--text);font-weight:500" id="health-label">—</span>
-              <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)" id="health-sub">—</span>
+    <!-- MOBILE TABS -->
+    <div class="mobile-tabs" id="mobile-tabs">
+      <div class="mobile-tab active" onclick="setPage('overview')">Synthèse</div>
+      <div class="mobile-tab" onclick="setPage('cartes')">Cartes</div>
+      <div class="mobile-tab" onclick="setPage('scelle')">Scellé</div>
+      <div class="mobile-tab" onclick="setPage('evolution')">Évolution</div>
+      <div class="mobile-tab" onclick="setPage('compare')">Comparaison</div>
+      <div class="mobile-tab" onclick="setPage('predictions')">Prédictions</div>
+    </div>
+
+    <!-- PAGES -->
+    <main id="dashboard">
+
+      <!-- PAGE OVERVIEW -->
+      <div class="page-body panel active" id="panel-overview">
+        <div class="finary-grid">
+          <div class="finary-main">
+
+            <!-- Graphique principal -->
+            <div class="graph-card">
+              <div class="graph-date" id="ov-date">—</div>
+              <div class="graph-total" id="ov-total">—</div>
+              <div id="ov-delta-badge" class="graph-delta-badge neg" style="display:none"></div>
+              <div class="graph-chart-wrap">
+                <canvas id="chart-overview"></canvas>
+              </div>
+              <div class="graph-period-row">
+                <button class="period-ref-btn" id="ov-ref-btn">Période 0 — 7 161 €</button>
+                <button class="period-compare-btn">Comparer avec</button>
+                <select class="period-compare-sel" id="ov-compare-sel" onchange="onOvCompare()"></select>
+              </div>
             </div>
-            <div class="health-bar-track"><div class="health-bar-fill" id="health-bar" style="width:0%"></div></div>
+
+            <!-- KPIs -->
+            <div class="kpi-row" id="ov-kpis"></div>
+
+            <!-- Alertes -->
+            <div class="alert-band" id="alert-band">
+              <div class="alert-band-title">Alertes — Variations &gt; 5%</div>
+              <div class="alert-list" id="alert-list"></div>
+            </div>
+
+            <!-- Comparaison -->
+            <div class="compare-card" id="ov-compare-card" style="display:none">
+              <div class="compare-card-header">
+                <span class="compare-card-title" id="ov-compare-title">Comparaison</span>
+                <div class="eur-pct-toggle" id="ov-eur-pct">
+                  <button class="on" onclick="setOvMode('eur')">€</button>
+                  <button onclick="setOvMode('pct')">%</button>
+                </div>
+              </div>
+              <div id="ov-compare-rows"></div>
+            </div>
+
+          </div>
+          <div class="finary-side">
+
+            <!-- Score santé -->
+            <div class="side-card">
+              <div class="health-top">
+                <div class="health-circle" id="side-health-num">—</div>
+                <div>
+                  <div class="side-card-title">Score de santé</div>
+                  <div class="side-card-sub" id="side-health-sub">—</div>
+                </div>
+              </div>
+              <div class="health-bars" id="side-health-bars"></div>
+            </div>
+
+            <!-- Plus-value -->
+            <div class="plusval-card">
+              <div class="plusval-label" id="pv-label">Plus-value</div>
+              <div class="plusval-val" id="pv-val">—</div>
+              <div class="plusval-desc">Variation de valeur sur la période sélectionnée.</div>
+            </div>
+
+            <!-- Prédiction 1 an -->
+            <div class="side-card">
+              <div class="pred-side-label">Prédiction 1 an</div>
+              <div class="pred-side-val" id="pred-1a-val">—</div>
+              <div id="pred-1a-delta" class="graph-delta-badge pos" style="margin-bottom:6px;display:inline-block"></div>
+              <div class="pred-side-range" id="pred-1a-range">—</div>
+            </div>
+
           </div>
         </div>
-        <div class="health-criteria" id="health-criteria"></div>
       </div>
-      <div class="alert-band" id="alert-band">
-        <div class="alert-band-title">⚠️ Alertes — Variations &gt; 5%</div>
-        <div class="alert-list" id="alert-list"></div>
-      </div>
-    </div>
-    <div class="g4" id="kpi-grid"></div>
-    <div class="g2">
-      <div>
-        <div class="section-title">Top 10 cartes</div>
-        <div class="table-wrap"><div class="table-scroll"><table id="tbl-top-cartes"></table></div></div>
-      </div>
-      <div>
-        <div class="section-title">Répartition par état</div>
-        <div class="table-wrap" style="padding:20px" id="etat-chart"></div>
-        <div class="section-title" style="margin-top:16px">Valeur par bloc</div>
-        <div class="table-wrap" style="padding:20px" id="bloc-chart"></div>
-      </div>
-    </div>
-    <div class="section-title">Points d'attention</div>
-    <div class="g3" id="highlights"></div>
-  </div>
 
-  <!-- CARTES -->
-  <div class="panel" id="panel-cartes">
-    <div class="section-title">Meilleures performances cartes</div>
-    <div class="g2" id="cartes-perf-grid">
-      <div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes hausses (toutes périodes)</div>
-        <div class="table-wrap"><div class="table-scroll">
-          <table><thead><tr><th>#</th><th>Carte</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
-          <tbody id="tbody-cartes-up"></tbody></table>
-        </div></div>
-      </div>
-      <div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes baisses (toutes périodes)</div>
-        <div class="table-wrap"><div class="table-scroll">
-          <table><thead><tr><th>#</th><th>Carte</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
-          <tbody id="tbody-cartes-down"></tbody></table>
-        </div></div>
-      </div>
-    </div>
-    <div class="section-title" style="margin-top:8px">Toutes les cartes</div>
-    <div class="filter-bar">
-      <input class="filter-input" id="search-cartes" type="text" placeholder="Rechercher…" oninput="filterCartes()">
-      <select class="filter-select" id="filter-etat" onchange="filterCartes()">
-        <option value="">Tous les états</option>
-        <option>Mint</option><option>Excellent</option><option>Very Good</option>
-        <option>Good</option><option>Played</option><option>Poor</option>
-      </select>
-      <select class="filter-select" id="filter-bloc" onchange="filterCartes()"><option value="">Tous les blocs</option></select>
-    </div>
-    <div class="table-wrap"><div class="table-scroll">
-      <table>
-        <thead><tr><th>#</th><th>Carte</th><th>État</th><th>Ver.</th><th>Lang.</th><th class="tr">Achat</th><th class="tr">Valeur</th><th class="tr">Gain</th><th class="tr">Vol.</th></tr></thead>
-        <tbody id="tbody-cartes"></tbody>
-      </table>
-    </div></div>
-  </div>
-
-  <!-- SCELLÉ -->
-  <div class="panel" id="panel-scelle">
-    <div class="section-title">Items scellés</div>
-    <div class="g4" id="scelle-kpis"></div>
-    <div class="section-title">Meilleures performances scellé</div>
-    <div class="g2" id="items-perf-grid">
-      <div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes hausses (toutes périodes)</div>
-        <div class="table-wrap"><div class="table-scroll">
-          <table><thead><tr><th>#</th><th>Item</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
-          <tbody id="tbody-items-up"></tbody></table>
-        </div></div>
-      </div>
-      <div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">● Plus fortes baisses (toutes périodes)</div>
-        <div class="table-wrap"><div class="table-scroll">
-          <table><thead><tr><th>#</th><th>Item</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ €</th><th class="tr">Δ %</th></tr></thead>
-          <tbody id="tbody-items-down"></tbody></table>
-        </div></div>
-      </div>
-    </div>
-    <div class="g2" style="margin-top:8px">
-      <div>
-        <div class="section-title">Tous les items</div>
-        <div class="table-wrap"><div class="table-scroll">
-          <table>
-            <thead><tr>
-              <th onclick="sortItems('type')" style="cursor:pointer">Type <span id="sort-type">↕</span></th>
-              <th>Item</th>
-              <th class="tr" onclick="sortItems('qte')" style="cursor:pointer">Qté <span id="sort-qte">↕</span></th>
-              <th class="tr" onclick="sortItems('achat')" style="cursor:pointer">Achat <span id="sort-achat">↕</span></th>
-              <th class="tr" onclick="sortItems('actuel')" style="cursor:pointer">Actuel <span id="sort-actuel">↕</span></th>
-              <th class="tr" onclick="sortItems('gain')" style="cursor:pointer">Gain <span id="sort-gain">↕</span></th>
-              <th class="tr" onclick="sortItems('pct')" style="cursor:pointer">% <span id="sort-pct">↕</span></th>
-            </tr></thead>
-            <tbody id="tbody-items"></tbody>
-          </table>
-        </div></div>
-      </div>
-      <div>
-        <div class="section-title">Gain par type</div>
-        <div class="table-wrap" style="padding:20px" id="type-chart"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- COMPARE -->
-  <div class="panel" id="panel-compare">
-    <div id="compare-selectors" style="display:none;margin-bottom:20px">
-      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
-        <div class="form-group">
-          <span class="form-label">Période de référence</span>
-          <select class="filter-select" id="compare-sel-p1" onchange="onCompareSelect()" style="width:200px;padding:9px 12px"></select>
-        </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--muted);padding-bottom:4px">→</div>
-        <div class="form-group">
-          <span class="form-label">Période à comparer</span>
-          <select class="filter-select" id="compare-sel-p2" onchange="onCompareSelect()" style="width:200px;padding:9px 12px"></select>
+      <!-- PAGE CARTES -->
+      <div class="page-body panel" id="panel-cartes">
+        <div class="cartes-grid">
+          <div class="cartes-main">
+            <div class="search-wrap">
+              <i class="ti ti-search" aria-hidden="true"></i>
+              <input type="text" id="search-cartes" placeholder="Rechercher une carte..." oninput="onCartesSearch()">
+            </div>
+            <div id="cartes-search-results" style="display:none">
+              <div class="table-wrap"><div class="table-scroll">
+                <table>
+                  <thead><tr><th>#</th><th>Carte</th><th>État</th><th>Ver.</th><th class="tr">Valeur</th><th class="tr">Gain</th></tr></thead>
+                  <tbody id="tbody-cartes-search"></tbody>
+                </table>
+              </div></div>
+            </div>
+            <!-- Carte mise en avant -->
+            <div class="featured-wrap" id="featured-carte-wrap">
+              <div class="featured-header">
+                <span class="featured-header-label">Carte sélectionnée · défilement auto toutes les 30s</span>
+                <i class="ti ti-player-pause featured-pause" id="featured-pause-btn" onclick="toggleAutoplay()" aria-hidden="true"></i>
+              </div>
+              <div class="featured-body" id="featured-carte-body">
+                <div class="featured-img" id="featured-carte-img"><i class="ti ti-cards" aria-hidden="true"></i></div>
+                <div class="featured-info">
+                  <div class="featured-name" id="featured-carte-name">—</div>
+                  <div class="featured-serie" id="featured-carte-serie">—</div>
+                  <div class="featured-kpis" id="featured-carte-kpis"></div>
+                </div>
+              </div>
+              <div class="featured-chart">
+                <canvas id="featured-carte-chart"></canvas>
+              </div>
+              <div class="featured-axis-labels" id="featured-carte-axis"></div>
+            </div>
+            <!-- Item mis en avant -->
+            <div class="featured-wrap" id="featured-item-wrap">
+              <div class="featured-header">
+                <span class="featured-header-label">Item scellé · défilement auto</span>
+              </div>
+              <div class="featured-body" id="featured-item-body">
+                <div class="featured-img" id="featured-item-img"><i class="ti ti-package" aria-hidden="true"></i></div>
+                <div class="featured-info">
+                  <div class="featured-name" id="featured-item-name">—</div>
+                  <div class="featured-serie" id="featured-item-serie">—</div>
+                  <div class="featured-kpis" id="featured-item-kpis"></div>
+                </div>
+              </div>
+              <div class="featured-chart">
+                <canvas id="featured-item-chart"></canvas>
+              </div>
+              <div class="featured-axis-labels" id="featured-item-axis"></div>
+            </div>
+            <!-- Toutes les cartes -->
+            <div class="section-title" style="margin-top:8px">Toutes les cartes</div>
+            <div class="filter-bar">
+              <select class="filter-select" id="filter-etat" onchange="filterCartes()">
+                <option value="">Tous les états</option>
+                <option>Mint</option><option>Excellent</option><option>Very Good</option>
+                <option>Good</option><option>Played</option><option>Poor</option>
+              </select>
+              <select class="filter-select" id="filter-bloc" onchange="filterCartes()"><option value="">Tous les blocs</option></select>
+            </div>
+            <div class="table-wrap"><div class="table-scroll">
+              <table>
+                <thead><tr><th>#</th><th>Carte</th><th>État</th><th>Ver.</th><th>Lang.</th><th class="tr">Achat</th><th class="tr">Valeur</th><th class="tr">Gain</th><th class="tr">Vol.</th></tr></thead>
+                <tbody id="tbody-cartes"></tbody>
+              </table>
+            </div></div>
+          </div>
+          <div class="cartes-side">
+            <!-- Top 5 cartes -->
+            <div class="top5-card">
+              <div class="top5-header">
+                <span class="top5-title">Top 5 cartes</span>
+                <div class="eur-pct-toggle">
+                  <button class="on" onclick="setTop5Mode('cartes','eur',this)">€</button>
+                  <button onclick="setTop5Mode('cartes','pct',this)">%</button>
+                </div>
+              </div>
+              <div id="top5-cartes"></div>
+            </div>
+            <!-- Top 5 scellé -->
+            <div class="top5-card">
+              <div class="top5-header">
+                <span class="top5-title">Top 5 scellé</span>
+                <div class="eur-pct-toggle">
+                  <button class="on" onclick="setTop5Mode('items','eur',this)">€</button>
+                  <button onclick="setTop5Mode('items','pct',this)">%</button>
+                </div>
+              </div>
+              <div id="top5-items"></div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="compare-content">
-      <div class="empty-state">
-        <div class="e-icon">📊</div>
-        <p>Au moins 2 périodes sont nécessaires<br>pour afficher la comparaison.</p>
-      </div>
-    </div>
-  </div>
 
-  <!-- ÉVOLUTION -->
-  <div class="panel" id="panel-evolution">
-    <div class="g2">
-      <div>
-        <div class="section-title">Historique des périodes</div>
-        <div class="period-manager">
-          <div class="period-list" id="period-list"></div>
-
+      <!-- PAGE SCELLÉ -->
+      <div class="page-body panel" id="panel-scelle">
+        <div class="section-title">Items scellés</div>
+        <div id="scelle-kpis" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px"></div>
+        <div class="section-title">Meilleures performances scellé</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px" id="items-perf-grid">
+          <div>
+            <div style="font-size:11px;color:var(--green);margin-bottom:8px">Hausses (toutes périodes)</div>
+            <div class="table-wrap"><div class="table-scroll">
+              <table><thead><tr><th>#</th><th>Item</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ</th><th class="tr">%</th></tr></thead>
+              <tbody id="tbody-items-up"></tbody></table>
+            </div></div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--red);margin-bottom:8px">Baisses (toutes périodes)</div>
+            <div class="table-wrap"><div class="table-scroll">
+              <table><thead><tr><th>#</th><th>Item</th><th class="tr">Début</th><th class="tr">Actuel</th><th class="tr">Δ</th><th class="tr">%</th></tr></thead>
+              <tbody id="tbody-items-down"></tbody></table>
+            </div></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div class="section-title">Tous les items</div>
+            <div class="table-wrap"><div class="table-scroll">
+              <table>
+                <thead><tr>
+                  <th onclick="sortItems('type')" style="cursor:pointer">Type <span id="sort-type">↕</span></th>
+                  <th>Item</th>
+                  <th class="tr" onclick="sortItems('qte')" style="cursor:pointer">Qté <span id="sort-qte">↕</span></th>
+                  <th class="tr" onclick="sortItems('achat')" style="cursor:pointer">Achat <span id="sort-achat">↕</span></th>
+                  <th class="tr" onclick="sortItems('actuel')" style="cursor:pointer">Actuel <span id="sort-actuel">↕</span></th>
+                  <th class="tr" onclick="sortItems('gain')" style="cursor:pointer">Gain <span id="sort-gain">↕</span></th>
+                  <th class="tr" onclick="sortItems('pct')" style="cursor:pointer">% <span id="sort-pct">↕</span></th>
+                </tr></thead>
+                <tbody id="tbody-items"></tbody>
+              </table>
+            </div></div>
+          </div>
+          <div>
+            <div class="section-title">Gain par type</div>
+            <div class="table-wrap" style="padding:16px" id="type-chart"></div>
+          </div>
         </div>
       </div>
-      <div>
-        <div class="section-title">Évolution de la valeur totale</div>
+
+      <!-- PAGE ÉVOLUTION -->
+      <div class="page-body panel" id="panel-evolution">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div class="section-title">Historique des périodes</div>
+            <div class="period-manager">
+              <div class="period-list" id="period-list"></div>
+            </div>
+          </div>
+          <div>
+            <div class="section-title">Évolution valeur totale</div>
+            <div class="chart-card"><canvas id="chart-evolution"></canvas></div>
+            <div class="section-title">Répartition cartes / scellé</div>
+            <div class="chart-card"><canvas id="chart-split"></canvas></div>
+          </div>
+        </div>
+        <div class="section-title">Top 5 performers</div>
+        <div class="top10-toggle">
+          <button class="toggle-btn active" id="toggle-cartes" onclick="setTop10Mode('cartes')">Cartes</button>
+          <button class="toggle-btn" id="toggle-items" onclick="setTop10Mode('items')">Items scellés</button>
+        </div>
+        <div id="top10-content">
+          <div class="empty-state"><div class="e-icon">🏆</div><p>Enregistrez au moins 2 périodes<br>pour voir les meilleurs performers.</p></div>
+        </div>
+      </div>
+
+      <!-- PAGE COMPARAISON -->
+      <div class="page-body panel" id="panel-compare">
+        <div id="compare-selectors" style="display:none;margin-bottom:20px">
+          <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap">
+            <div class="form-group">
+              <span class="form-label">Période de référence</span>
+              <select class="filter-select" id="compare-sel-p1" onchange="onCompareSelect()" style="width:200px;padding:9px 12px"></select>
+            </div>
+            <div style="font-size:24px;color:var(--muted);padding-bottom:4px">→</div>
+            <div class="form-group">
+              <span class="form-label">Période à comparer</span>
+              <select class="filter-select" id="compare-sel-p2" onchange="onCompareSelect()" style="width:200px;padding:9px 12px"></select>
+            </div>
+          </div>
+        </div>
+        <div id="compare-content">
+          <div class="empty-state"><div class="e-icon">📊</div><p>Au moins 2 périodes sont nécessaires<br>pour afficher la comparaison.</p></div>
+        </div>
+      </div>
+
+      <!-- PAGE PRÉDICTIONS -->
+      <div class="page-body panel" id="panel-predictions">
+        <div class="horizon-grid" id="pred-kpis"></div>
         <div class="chart-card">
-          <canvas id="chart-evolution"></canvas>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span class="section-title" style="margin:0;flex:1">Courbe de projection</span>
+            <div class="toggle-eur-pct" id="pred-toggle-chart">
+              <button class="on" onclick="setPredMode('eur','chart')">€</button>
+              <button onclick="setPredMode('pct','chart')">%</button>
+            </div>
+          </div>
+          <canvas id="pred-chart" style="max-height:240px"></canvas>
         </div>
-        <div class="section-title">Répartition cartes / scellé</div>
         <div class="chart-card">
-          <canvas id="chart-split"></canvas>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span class="section-title" style="margin:0;flex:1">Meilleures opportunités</span>
+            <div class="toggle-eur-pct" id="pred-toggle-opp">
+              <button class="on" onclick="setPredMode('eur','opp')">€</button>
+              <button onclick="setPredMode('pct','opp')">%</button>
+            </div>
+          </div>
+          <div id="pred-opps"></div>
+        </div>
+        <div class="pred-disclaimer">
+          <span style="font-size:14px;color:var(--muted);flex-shrink:0">ℹ</span>
+          <span class="pred-disclaimer-text" id="pred-disclaimer-text">Prédictions calculées sur la base des périodes historiques et des tendances marché Pokémon TCG.</span>
         </div>
       </div>
-    </div>
 
-    <div class="section-title">Top 5 performers entre les périodes</div>
-    <div class="top10-toggle">
-      <button class="toggle-btn active" id="toggle-cartes" onclick="setTop10Mode('cartes')">🃏 Cartes</button>
-      <button class="toggle-btn" id="toggle-items" onclick="setTop10Mode('items')">📦 Items scellés</button>
-    </div>
-    <div id="top10-content">
-      <div class="empty-state">
-        <div class="e-icon">🏆</div>
-        <p>Enregistrez au moins 2 périodes<br>pour voir les meilleurs performers.</p>
+    </main>
+
+    <footer class="app-footer">
+      <span id="footer-info"></span>
+      <span id="footer-date"></span>
+    </footer>
+
+    <!-- MOBILE NAV -->
+    <nav class="mobile-nav">
+      <div class="mobile-nav-item active" onclick="setPage('overview')" id="mnav-overview">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i><span>Synthèse</span>
       </div>
-    </div>
+      <div class="mobile-nav-item" onclick="setPage('cartes')" id="mnav-cartes">
+        <i class="ti ti-cards" aria-hidden="true"></i><span>Cartes</span>
+      </div>
+      <div class="mobile-nav-item" onclick="setPage('evolution')" id="mnav-evolution">
+        <i class="ti ti-chart-line" aria-hidden="true"></i><span>Évolution</span>
+      </div>
+      <div class="mobile-nav-item" onclick="setPage('predictions')" id="mnav-predictions">
+        <i class="ti ti-trending-up" aria-hidden="true"></i><span>Prédictions</span>
+      </div>
+      <div class="mobile-nav-item" onclick="setPage('compare')" id="mnav-compare">
+        <i class="ti ti-dots" aria-hidden="true"></i><span>Plus</span>
+      </div>
+    </nav>
+
   </div>
+</div>
 
-  <!-- PREDICTIONS -->
-  <div class="panel" id="panel-predictions">
-    <div class="horizon-grid" id="pred-kpis"></div>
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <span class="section-title" style="margin:0;flex:1">Courbe de projection</span>
-        <div class="toggle-eur-pct" id="pred-toggle-chart">
-          <button class="on" onclick="setPredMode('eur','chart')">€</button>
-          <button onclick="setPredMode('pct','chart')">%</button>
-        </div>
-      </div>
-      <canvas id="pred-chart" style="max-height:240px"></canvas>
-    </div>
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <span class="section-title" style="margin:0;flex:1">Meilleures opportunités</span>
-        <div class="toggle-eur-pct" id="pred-toggle-opp">
-          <button class="on" onclick="setPredMode('eur','opp')">€</button>
-          <button onclick="setPredMode('pct','opp')">%</button>
-        </div>
-      </div>
-      <div id="pred-opps"></div>
-    </div>
-    <div class="pred-disclaimer">
-      <span style="font-size:14px;color:var(--muted);flex-shrink:0">ℹ</span>
-      <span class="pred-disclaimer-text" id="pred-disclaimer-text">Prédictions calculées sur la base de tes périodes historiques et des tendances marché Pokémon TCG connues. Les projections long terme sont indicatives.</span>
-    </div>
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div class="modal-inner" id="modal-inner"></div>
   </div>
-
-</main>
+</div>
 
 <footer class="app-footer">
   POKÉMON COLLECTION TRACKER &nbsp;|&nbsp; <span id="footer-info"></span> &nbsp;|&nbsp; Généré le __GEN_DATE__
@@ -673,45 +889,6 @@ function computeStats(cartes,items){
   return{totalCartes,totalItems,gainItems,etats,blocs,types,top10,worstItem,bestPct,nbCartes:cartes.length,nbItems:items.length};
 }
 
-/* ── RENDER OVERVIEW ── */
-function renderOverview(s1,s2){
-  const hasP2=!!s2;
-  const kpis=[
-    {l:'Total collection',v:eur(s1.totalCartes+s1.totalItems),c:'gold',sub:'cartes + scellé',d:hasP2?(s2.totalCartes+s2.totalItems)-(s1.totalCartes+s1.totalItems):null},
-    {l:'Valeur cartes',v:eur(s1.totalCartes),c:'blue',sub:`${s1.nbCartes} cartes`,d:hasP2?s2.totalCartes-s1.totalCartes:null},
-    {l:'Valeur scellé',v:eur(s1.totalItems),c:'purple',sub:`${s1.nbItems} items`,d:hasP2?s2.totalItems-s1.totalItems:null},
-    {l:'Gain scellé',v:eur(s1.gainItems),c:'green',sub:'sur achats renseignés',d:hasP2?s2.gainItems-s1.gainItems:null},
-  ];
-  document.getElementById('kpi-grid').innerHTML=kpis.map(k=>`
-    <div class="stat-card c-${k.c}">
-      <div class="stat-label">${k.l}</div>
-      <div class="stat-value c-${k.c}">${k.v}</div>
-      <div class="stat-sub">${k.sub}</div>
-      ${k.d!==null?`<div class="stat-delta ${k.d>=0?'delta-pos':'delta-neg'}">${k.d>=0?'↑':'↓'} ${eur(Math.abs(k.d))} vs P1</div>`:''}
-    </div>`).join('');
-  document.getElementById('tbl-top-cartes').innerHTML=`
-    <thead><tr><th>#</th><th>Carte</th><th>État</th><th class="tr">Valeur</th></tr></thead>
-    <tbody>${s1.top10.map((c,i)=>`<tr>
-      <td class="rank">${i+1}</td>
-      <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']} · ${c['Numéro']}</div></td>
-      <td>${tagEtat(c['État'])}</td>
-      <td class="tr mono" style="color:var(--gold)">${eur(c._actuel)}</td>
-    </tr>`).join('')}</tbody>`;
-  const etatOrder=['Mint','Excellent','Very Good','Good','Played','Poor'];
-  const etatsArr=etatOrder.filter(e=>s1.etats[e]).map(e=>({e,...s1.etats[e]}));
-  const etatC={Mint:'linear-gradient(90deg,#0f8a5a,#2ecc8a)',Excellent:'linear-gradient(90deg,#1a6fcc,#4a9eff)','Very Good':'linear-gradient(90deg,#6040cc,#9b6dff)',Good:'linear-gradient(90deg,#c98a1a,#f0c040)',Played:'linear-gradient(90deg,#b02030,#f0485a)',Poor:'rgba(240,72,90,.5)'};
-  document.getElementById('etat-chart').innerHTML='<div>'+barHtml(etatsArr,it=>etatC[it.e]||'gray',it=>it.val,it=>`${it.e} (${it.count})`)+'</div>';
-  const blocsArr=Object.entries(s1.blocs).sort((a,b)=>b[1].val-a[1].val).map(([b,v])=>({b,...v}));
-  document.getElementById('bloc-chart').innerHTML='<div>'+barHtml(blocsArr,it=>BLOC_C[it.b]||'rgba(107,107,133,.5)',it=>it.val,it=>`${it.b} (${it.count})`)+'</div>';
-  const cardTop=s1.top10[0];
-  const hl=[
-    {cls:'hl-blue',l:'💎 Carte la plus précieuse',v:cardTop['Nom'],s:`${eur(cardTop._actuel)} · ${cardTop['Série']} · ${cardTop['État']}`},
-    s1.bestPct?{cls:'hl-green',l:'🏆 Meilleur rendement scellé',v:s1.bestPct['Série'],s:`Achat ${eur(s1.bestPct._achat)} → ${eur(s1.bestPct._actuel)}<br><span style="color:var(--green)">+${s1.bestPct._gain.toFixed(2)} € (${pct(s1.bestPct._pct)})</span>`}:null,
-    s1.worstItem?{cls:'hl-red',l:'⚠️ Item en perte',v:s1.worstItem['Série'],s:`Achat ${eur(s1.worstItem._achat)} → ${eur(s1.worstItem._actuel)}<br><span style="color:var(--red)">${eur(s1.worstItem._gain)} (${pct(s1.worstItem._pct)})</span>`}:null,
-  ].filter(Boolean);
-  document.getElementById('highlights').innerHTML=hl.map(h=>`
-    <div class="hl-card ${h.cls}"><div class="hl-label">${h.l}</div><div class="hl-value">${h.v}</div><div class="hl-sub">${h.s}</div></div>`).join('');
-}
 
 /* ── RENDER CARTES ── */
 let _cartesData=[];
@@ -835,24 +1012,6 @@ function toggleTheme(){
   if(document.getElementById('panel-predictions').classList.contains('active')) renderPredictions();
 }
 
-/* ── TICKER ── */
-function renderTicker(cartes, items) {
-  const totalCartes = cartes.reduce((s,c)=>s+c._actuel,0);
-  const totalItems  = items.reduce((s,i)=>s+i._actuel,0);
-  const total = totalCartes + totalItems;
-  const gainItems = items.reduce((s,i)=>s+i._gain,0);
-  const achatItems = items.filter(i=>i._achat>0).reduce((s,i)=>s+i._achat,0);
-  const rendement = achatItems>0 ? gainItems/achatItems*100 : 0;
-
-  let deltaTicker = '';
-  if (PERIODS.length >= 2) {
-    const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
-    const prev = sorted[sorted.length-2];
-    const prevTotal = prev.totalCartes + prev.totalItems;
-    const delta = total - prevTotal;
-    const deltaPct = prevTotal > 0 ? delta/prevTotal*100 : 0;
-    deltaTicker = `<span class="tick-${delta>=0?'up':'down'}">${delta>=0?'+':''}${delta.toFixed(0)} € (${deltaPct>=0?'+':''}${deltaPct.toFixed(1)}%)</span>`;
-  }
 
   document.getElementById('ticker').innerHTML = `
     <div class="tick"><span class="tick-name">TOTAL</span><span class="tick-val">${eur(total)}</span>${deltaTicker}</div>
@@ -1110,6 +1269,441 @@ function renderPredOpps() {
       </div>
       <span class="opp-badge ${o.conf}">${confLabel[o.conf]}</span>
       <div class="opp-horizons">${h(o.h30j)}${h(o.h1a)}${h(o.h5a)}${h(o.h10a)}</div>
+    </div>`;
+  }).join('');
+}
+
+
+/* ── NAVIGATION FINARY ── */
+let _currentPage = 'overview';
+
+function setPage(name) {
+  _currentPage = name;
+  // Panels
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`panel-${name}`);
+  if (panel) panel.classList.add('active');
+  // Sidebar
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${name}`);
+  if (navEl) navEl.classList.add('active');
+  // Mobile nav
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+  const mNavEl = document.getElementById(`mnav-${name}`);
+  if (mNavEl) mNavEl.classList.add('active');
+  // Mobile tabs
+  document.querySelectorAll('.mobile-tab').forEach((t,i) => {
+    const pages = ['overview','cartes','scelle','evolution','compare','predictions'];
+    t.classList.toggle('active', pages[i] === name);
+  });
+  // Topbar title
+  const titles = { overview:'Synthèse', cartes:'Cartes', scelle:'Scellé',
+    evolution:'Évolution', compare:'Comparaison', predictions:'Prédictions' };
+  document.getElementById('topbar-title').textContent = titles[name] || name;
+  // Déclencher rendus
+  if (name === 'evolution')    renderEvolution();
+  if (name === 'compare')      renderCompare();
+  if (name === 'predictions')  renderPredictions();
+  if (name === 'cartes')       renderFeatured();
+}
+
+/* Backward compat — setTab appelé par ancien code */
+function setTab(name) { setPage(name); }
+
+/* ── THEME ── */
+let _darkMode = false;
+function toggleTheme() {
+  _darkMode = !_darkMode;
+  document.body.classList.toggle('dark', _darkMode);
+  const sw = document.getElementById('theme-switch');
+  if (sw) sw.classList.toggle('on', _darkMode);
+  document.getElementById('theme-label').textContent = _darkMode ? 'Thème sombre' : 'Thème clair';
+  // Redraw charts
+  if (chartEvol) { chartEvol.destroy(); chartEvol = null; }
+  if (chartSplit) { chartSplit.destroy(); chartSplit = null; }
+  if (_predChart) { _predChart.destroy(); _predChart = null; }
+  if (_ovChart)   { _ovChart.destroy();   _ovChart = null; }
+  if (_featCarteChart) { _featCarteChart.destroy(); _featCarteChart = null; }
+  if (_featItemChart)  { _featItemChart.destroy();  _featItemChart = null; }
+  renderAll();
+}
+
+/* ── CHART DEFAULTS ── */
+function chartDefaults(yFmt) {
+  const textC = _darkMode ? '#4a5568' : '#888780';
+  const gridC = _darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  return {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' ' + yFmt(ctx.parsed.y) } }
+    },
+    scales: {
+      x: { ticks: { color: textC, font: { family:'DM Sans', size:10 } }, grid: { color: gridC } },
+      y: { ticks: { color: textC, font: { family:'DM Sans', size:10 }, callback: yFmt }, grid: { color: gridC } }
+    }
+  };
+}
+
+/* ── OVERVIEW CHART ── */
+let _ovChart = null;
+let _ovMode = 'eur';
+let _ovCompareId = null;
+
+function setOvMode(mode) {
+  _ovMode = mode;
+  document.querySelectorAll('#ov-eur-pct button').forEach((b,i) => b.classList.toggle('on', i===(mode==='eur'?0:1)));
+  renderOvCompareRows();
+}
+
+function onOvCompare() {
+  const sel = document.getElementById('ov-compare-sel');
+  _ovCompareId = sel ? parseInt(sel.value) : null;
+  renderOvCompareRows();
+  renderOvDelta();
+}
+
+function renderOverviewFinary(cartes, items) {
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const totalNow = cartes.reduce((s,c)=>s+c._actuel,0) + items.reduce((s,i)=>s+i._actuel,0);
+  const today = new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('ov-date').textContent = today;
+  document.getElementById('ov-total').textContent = eur(totalNow);
+
+  // Populate compare selector
+  const sel = document.getElementById('ov-compare-sel');
+  if (sel && sorted.length >= 2) {
+    sel.innerHTML = sorted.map(p=>`<option value="${p.id}">${p.name} — ${eur(p.totalCartes+p.totalItems)}</option>`).join('');
+    if (sorted.length >= 2) {
+      sel.value = sorted[sorted.length-2].id;
+      _ovCompareId = sorted[sorted.length-2].id;
+    }
+  }
+
+  // Ref button
+  if (sorted.length > 0) {
+    const ref = sorted[0];
+    document.getElementById('ov-ref-btn').textContent = `${ref.name} — ${eur(ref.totalCartes+ref.totalItems)}`;
+  }
+
+  renderOvChart(sorted, totalNow);
+  renderOvDelta();
+  renderOvKpis(cartes, items);
+  renderOvCompareRows();
+  renderSideHealth();
+  renderSidePred(cartes, items);
+}
+
+function renderOvChart(sorted, totalNow) {
+  const labels = [...sorted.map(p=>p.name), 'Actuel'];
+  const vals   = [...sorted.map(p=>+(p.totalCartes+p.totalItems).toFixed(2)), +totalNow.toFixed(2)];
+  if (_ovChart) _ovChart.destroy();
+  const opts = chartDefaults(v=>eur(v));
+  opts.plugins.legend = { display: false };
+  opts.scales.y.ticks.callback = v => v.toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:0})+' €';
+  _ovChart = new Chart(document.getElementById('chart-overview'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: vals,
+        borderColor: '#f5a623',
+        backgroundColor: 'rgba(245,166,35,0.06)',
+        pointBackgroundColor: '#f5a623',
+        pointRadius: 4, pointHoverRadius: 6,
+        fill: true, tension: .35, borderWidth: 2,
+      }]
+    },
+    options: opts
+  });
+}
+
+function renderOvDelta() {
+  const badge = document.getElementById('ov-delta-badge');
+  if (!_ovCompareId || !PERIODS.length) { badge.style.display='none'; return; }
+  const cmp = PERIODS.find(p=>p.id===_ovCompareId);
+  if (!cmp) { badge.style.display='none'; return; }
+  const now = DATA.p1.cartes.reduce((s,c)=>s+c._actuel,0) + DATA.p1.items.reduce((s,i)=>s+i._actuel,0);
+  const prev = cmp.totalCartes + cmp.totalItems;
+  const delta = now - prev;
+  badge.style.display = 'inline-block';
+  badge.className = `graph-delta-badge ${delta>=0?'pos':'neg'}`;
+  badge.textContent = `${delta>=0?'+':''}${eur(delta)} vs ${cmp.name}`;
+  // Plus-value side
+  const pvLabel = document.getElementById('pv-label');
+  const pvVal   = document.getElementById('pv-val');
+  if (pvLabel) pvLabel.textContent = `Plus-value · vs ${cmp.name}`;
+  if (pvVal)   { pvVal.textContent = `${delta>=0?'+':''}${eur(delta)}`; pvVal.style.color = delta>=0?'var(--green)':'var(--red)'; }
+}
+
+function renderOvKpis(cartes, items) {
+  const totalCartes = cartes.reduce((s,c)=>s+c._actuel,0);
+  const totalItems  = items.reduce((s,i)=>s+i._actuel,0);
+  const gainItems   = items.reduce((s,i)=>s+i._gain,0);
+  const achatItems  = items.filter(i=>i._achat>0).reduce((s,i)=>s+i._achat,0);
+  const rend = achatItems>0 ? gainItems/achatItems*100 : 0;
+  let dCartes='', dItems='';
+  if (_ovCompareId) {
+    const cmp = PERIODS.find(p=>p.id===_ovCompareId);
+    if (cmp) {
+      const dc = totalCartes - cmp.totalCartes;
+      const di = totalItems  - cmp.totalItems;
+      dCartes = `<div class="kpi-delta ${dc>=0?'pos':'neg'}">${dc>=0?'+':''}${eur(dc)}</div>`;
+      dItems  = `<div class="kpi-delta ${di>=0?'pos':'neg'}">${di>=0?'+':''}${eur(di)}</div>`;
+    }
+  }
+  document.getElementById('ov-kpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Cartes</div><div class="kpi-value">${eur(totalCartes)}</div>${dCartes}</div>
+    <div class="kpi-card"><div class="kpi-label">Scellé</div><div class="kpi-value">${eur(totalItems)}</div>${dItems}</div>
+    <div class="kpi-card"><div class="kpi-label">Gain net</div><div class="kpi-value" style="color:${gainItems>=0?'var(--green)':'var(--red)'}">${gainItems>=0?'+':''}${eur(gainItems)}</div><div class="kpi-delta ${rend>=0?'pos':'neu'}">${rend>=0?'Rendement ':''}${rend.toFixed(1)}%</div></div>`;
+}
+
+function renderOvCompareRows() {
+  const card  = document.getElementById('ov-compare-card');
+  const title = document.getElementById('ov-compare-title');
+  const rows  = document.getElementById('ov-compare-rows');
+  if (!_ovCompareId || !PERIODS.length) { card.style.display='none'; return; }
+  const cmp = PERIODS.find(p=>p.id===_ovCompareId);
+  if (!cmp) { card.style.display='none'; return; }
+  card.style.display = 'block';
+  const now = DATA.p1.cartes, prev = cmp.cartes||[];
+  const map1 = Object.fromEntries(prev.map(c=>[c._key,c]));
+  const movers = [];
+  now.forEach(c => {
+    const old = map1[c._key];
+    if (!old) return;
+    const diff = c._actuel - old._actuel;
+    if (Math.abs(diff) > 0.01) movers.push({ nom:c['Nom'], v1:old._actuel, v2:c._actuel, diff, pct:old._actuel>0?diff/old._actuel*100:0 });
+  });
+  // Items
+  const mapi = Object.fromEntries((cmp.items||[]).map(i=>[i._key,i]));
+  DATA.p1.items.forEach(i => {
+    const old = mapi[i._key];
+    if (!old) return;
+    const diff = i._actuel - old._actuel;
+    if (Math.abs(diff) > 0.01) movers.push({ nom:i['Série'], v1:old._actuel, v2:i._actuel, diff, pct:old._actuel>0?diff/old._actuel*100:0 });
+  });
+  movers.sort((a,b)=>Math.abs(b.diff)-Math.abs(a.diff));
+  title.textContent = `Comparaison ${cmp.name} → Actuel`;
+  if (movers.length === 0) { card.style.display='none'; return; }
+  rows.innerHTML = movers.slice(0,6).map(m => {
+    const val = _ovMode==='eur' ? `${m.diff>=0?'+':''}${eur(m.diff)}` : `${m.pct>=0?'+':''}${m.pct.toFixed(1)}%`;
+    return `<div class="compare-row">
+      <span class="compare-name">${m.nom}</span>
+      <div class="compare-vals">
+        <span class="compare-prev">${eur(m.v1)}</span>
+        <span class="compare-curr">${eur(m.v2)}</span>
+        <span class="delta-badge ${m.diff>=0?'delta-pos':'delta-neg'}">${val}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSideHealth() {
+  const { score, criteria } = computeHealth(DATA.p1.cartes, DATA.p1.items);
+  const cls = score>=75?'s-great':score>=55?'s-good':score>=35?'s-warn':'s-bad';
+  const label = score>=75?'Excellente':score>=55?'Bonne forme':score>=35?'À surveiller':'En difficulté';
+  const color = score>=75?'var(--green)':score>=55?'var(--gold)':score>=35?'var(--gold2)':'var(--red)';
+  document.getElementById('side-health-num').textContent = score;
+  document.getElementById('side-health-num').style.borderColor = color;
+  document.getElementById('side-health-num').style.color = color;
+  document.getElementById('side-health-sub').textContent = label;
+  const barsEl = document.getElementById('side-health-bars');
+  if (barsEl) barsEl.innerHTML = criteria.map(c=>`
+    <div class="hbar-row">
+      <span class="hbar-label">${c.label}</span>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${c.ok?80:35}%;background:${c.ok?'var(--gold)':'var(--red)'}"></div></div>
+      <span class="hbar-val">${c.val}</span>
+    </div>`).join('');
+}
+
+function renderSidePred(cartes, items) {
+  const d = computePredictions(cartes, items);
+  const h1a = d.projections.find(p=>p.key==='1a');
+  if (!h1a) return;
+  const delta = h1a.central - d.totalNow;
+  const pct   = (delta/d.totalNow*100).toFixed(1);
+  document.getElementById('pred-1a-val').textContent = eur(h1a.central);
+  const badge = document.getElementById('pred-1a-delta');
+  badge.textContent = `${delta>=0?'+':''}${eur(delta)} · ${delta>=0?'+':''}${pct}%`;
+  badge.className = `graph-delta-badge ${delta>=0?'pos':'neg'}`;
+  document.getElementById('pred-1a-range').textContent = `Fourchette : ${eur(h1a.low)} — ${eur(h1a.high)}`;
+}
+
+/* ── FEATURED CARDS ── */
+let _featCarteIdx = 0;
+let _featItemIdx  = 0;
+let _featAutoplay = true;
+let _featTimer    = null;
+let _featCarteChart = null;
+let _featItemChart  = null;
+let _top5CartesData = [];
+let _top5ItemsData  = [];
+let _top5Mode = { cartes:'eur', items:'eur' };
+
+function renderFeatured() {
+  const c1 = DATA.p1.cartes, i1 = DATA.p1.items;
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  _top5CartesData = [...c1].sort((a,b)=>b._actuel-a._actuel).slice(0,5);
+  _top5ItemsData  = [...i1].sort((a,b)=>b._actuel-a._actuel).slice(0,5);
+  renderFeaturedCarte(_featCarteIdx, sorted);
+  renderFeaturedItem(_featItemIdx, sorted);
+  renderTop5('cartes');
+  renderTop5('items');
+  if (_featAutoplay) startAutoplay(sorted);
+}
+
+function renderFeaturedCarte(idx, sorted) {
+  const c = _top5CartesData[idx];
+  if (!c) return;
+  document.getElementById('featured-carte-name').textContent = c['Nom'];
+  document.getElementById('featured-carte-serie').textContent = `${c['Série']} · ${c['Numéro']} · ${c['État']}`;
+  const gain = c._achat>0 ? c._actuel-c._achat : null;
+  const rend = c._achat>0 ? (c._actuel-c._achat)/c._achat*100 : null;
+  document.getElementById('featured-carte-kpis').innerHTML = `
+    <div class="fkpi"><div class="fkpi-l">Valeur actuelle</div><div class="fkpi-v" style="color:var(--gold)">${eur(c._actuel)}</div></div>
+    <div class="fkpi"><div class="fkpi-l">Gain total</div><div class="fkpi-v" style="color:${gain>=0?'var(--green)':'var(--red)'}">${gain!==null?(gain>=0?'+':'')+eur(gain):'—'}</div></div>
+    <div class="fkpi"><div class="fkpi-l">Prix achat</div><div class="fkpi-v">${c._achat>0?eur(c._achat):'—'}</div></div>
+    <div class="fkpi"><div class="fkpi-l">Rendement</div><div class="fkpi-v">${rend!==null?(rend>=0?'+':'')+rend.toFixed(1)+'%':'—'}</div></div>`;
+  // Image
+  const imgEl = document.getElementById('featured-carte-img');
+  if (c._img) { imgEl.innerHTML=`<img src="${c._img}" style="width:100%;height:100%;object-fit:contain;border-radius:6px">`; }
+  else { imgEl.innerHTML='<i class="ti ti-cards" style="font-size:24px;color:var(--muted)"></i>'; }
+  // Graphique avec axes
+  const histVals = sorted.map(p=>{
+    const found = (p.cartes||[]).find(x=>x._key===c._key);
+    return found ? found._actuel : null;
+  }).filter(v=>v!==null);
+  const histLabels = sorted.slice(0,histVals.length).map(p=>p.name);
+  // Ajouter valeur actuelle
+  histLabels.push('Actuel'); histVals.push(c._actuel);
+  document.getElementById('featured-carte-axis').innerHTML = histLabels.map((l,i)=>`<span>${l}: ${eur(histVals[i])}</span>`).join('');
+  if (_featCarteChart) _featCarteChart.destroy();
+  const textC = _darkMode?'#4a5568':'#888780';
+  const gridC = _darkMode?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+  _featCarteChart = new Chart(document.getElementById('featured-carte-chart'), {
+    type:'line',
+    data:{ labels:histLabels, datasets:[{
+      data:histVals, borderColor:'#f5a623', backgroundColor:'rgba(245,166,35,0.06)',
+      pointBackgroundColor:'#f5a623', pointRadius:3, fill:true, tension:.35, borderWidth:1.5,
+    }]},
+    options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+eur(ctx.parsed.y)}} },
+      scales:{ x:{ticks:{color:textC,font:{size:9}},grid:{color:gridC}}, y:{ticks:{color:textC,font:{size:9},callback:v=>v.toLocaleString('fr-FR',{minimumFractionDigits:0})+' €'},grid:{color:gridC}} } }
+  });
+}
+
+function renderFeaturedItem(idx, sorted) {
+  const it = _top5ItemsData[idx];
+  if (!it) return;
+  document.getElementById('featured-item-name').textContent = it['Série'];
+  document.getElementById('featured-item-serie').textContent = `Scellé · ${it['Item']}`;
+  document.getElementById('featured-item-kpis').innerHTML = `
+    <div class="fkpi"><div class="fkpi-l">Valeur actuelle</div><div class="fkpi-v" style="color:var(--gold)">${eur(it._actuel)}</div></div>
+    <div class="fkpi"><div class="fkpi-l">Gain total</div><div class="fkpi-v" style="color:${it._gain>=0?'var(--green)':'var(--red)'}">${it._gain>=0?'+':''}${eur(it._gain)}</div></div>`;
+  const histVals = sorted.map(p=>{
+    const found = (p.items||[]).find(x=>x._key===it._key);
+    return found ? found._actuel : null;
+  }).filter(v=>v!==null);
+  const histLabels = sorted.slice(0,histVals.length).map(p=>p.name);
+  histLabels.push('Actuel'); histVals.push(it._actuel);
+  document.getElementById('featured-item-axis').innerHTML = histLabels.map((l,i)=>`<span>${l}: ${eur(histVals[i])}</span>`).join('');
+  if (_featItemChart) _featItemChart.destroy();
+  const textC = _darkMode?'#4a5568':'#888780';
+  const gridC = _darkMode?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.05)';
+  _featItemChart = new Chart(document.getElementById('featured-item-chart'), {
+    type:'line',
+    data:{ labels:histLabels, datasets:[{
+      data:histVals, borderColor:'#378add', backgroundColor:'rgba(55,138,221,0.06)',
+      pointBackgroundColor:'#378add', pointRadius:3, fill:true, tension:.35, borderWidth:1.5,
+    }]},
+    options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+eur(ctx.parsed.y)}} },
+      scales:{ x:{ticks:{color:textC,font:{size:9}},grid:{color:gridC}}, y:{ticks:{color:textC,font:{size:9},callback:v=>v.toLocaleString('fr-FR',{minimumFractionDigits:0})+' €'},grid:{color:gridC}} } }
+  });
+}
+
+function startAutoplay(sorted) {
+  if (_featTimer) clearInterval(_featTimer);
+  _featTimer = setInterval(()=>{
+    _featCarteIdx = (_featCarteIdx+1) % Math.min(_top5CartesData.length,5);
+    _featItemIdx  = (_featItemIdx+1)  % Math.min(_top5ItemsData.length,5);
+    renderFeaturedCarte(_featCarteIdx, sorted);
+    renderFeaturedItem(_featItemIdx, sorted);
+  }, 30000);
+}
+
+function toggleAutoplay() {
+  _featAutoplay = !_featAutoplay;
+  const btn = document.getElementById('featured-pause-btn');
+  if (btn) btn.className = `ti ${_featAutoplay?'ti-player-pause':'ti-player-play'} featured-pause`;
+  if (!_featAutoplay && _featTimer) { clearInterval(_featTimer); _featTimer=null; }
+  else if (_featAutoplay) {
+    const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    startAutoplay(sorted);
+  }
+}
+
+function onCartesSearch() {
+  const q = document.getElementById('search-cartes').value.toLowerCase().trim();
+  const resultsWrap = document.getElementById('cartes-search-results');
+  if (!q) { resultsWrap.style.display='none'; return; }
+  const found = _cartesData.filter(c=>c['Nom'].toLowerCase().includes(q)||c['Série'].toLowerCase().includes(q)).slice(0,15);
+  resultsWrap.style.display = found.length ? 'block' : 'none';
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  document.getElementById('tbody-cartes-search').innerHTML = found.map((c,i)=>{
+    const gain = c._achat>0?c._actuel-c._achat:null;
+    return `<tr style="cursor:pointer" onclick="selectFeaturedCarte('${c._key.replace(/'/g,'\'')}')">
+      <td class="rank-num">${i+1}</td>
+      <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
+      <td>${tagEtat(c['État'])}</td>
+      <td><span style="font-size:10px;color:var(--muted)">${c['Version']||''}</span></td>
+      <td class="tr mono" style="color:var(--gold)">${eur(c._actuel)}</td>
+      <td class="tr">${gain!==null?dHtml(gain):'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function selectFeaturedCarte(key) {
+  const idx = _cartesData.findIndex(c=>c._key===key);
+  if (idx<0) return;
+  // Mettre dans le top5 temporaire
+  _top5CartesData[0] = _cartesData[idx];
+  _featCarteIdx = 0;
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  renderFeaturedCarte(0, sorted);
+  document.getElementById('search-cartes').value = '';
+  document.getElementById('cartes-search-results').style.display = 'none';
+}
+
+/* ── TOP 5 ── */
+function setTop5Mode(type, mode, btn) {
+  _top5Mode[type] = mode;
+  const par = btn.closest('.eur-pct-toggle');
+  if (par) par.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',(i==0&&mode==='eur')||(i==1&&mode==='pct')));
+  renderTop5(type);
+}
+
+function renderTop5(type) {
+  const isCartes = type==='cartes';
+  const data  = isCartes ? _top5CartesData : _top5ItemsData;
+  const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const first  = sorted[0];
+  const mode   = _top5Mode[type];
+  const el     = document.getElementById(`top5-${type}`);
+  if (!el || !data.length) return;
+  el.innerHTML = data.map((item,i)=>{
+    let delta = 0, pct = 0;
+    if (first) {
+      const arr = isCartes ? (first.cartes||[]) : (first.items||[]);
+      const old = arr.find(x=>x._key===item._key);
+      if (old) { delta=item._actuel-old._actuel; pct=old._actuel>0?delta/old._actuel*100:0; }
+    }
+    const val = mode==='eur' ? `${delta>=0?'+':''}${eur(delta)}` : `${pct>=0?'+':''}${pct.toFixed(1)}%`;
+    const nom = isCartes ? item['Nom'] : item['Série'];
+    return `<div class="top5-row" onclick="${isCartes?`selectFeaturedCarte('${item._key.replace(/'/g,"\'")}')`:``}">
+      <span class="top5-rank">${i+1}</span>
+      <span class="top5-name" title="${nom}">${nom}</span>
+      <span class="top5-val">${eur(item._actuel)}</span>
+      <span class="top5-delta ${delta>=0?'delta-pos':'delta-neg'}">${val}</span>
     </div>`;
   }).join('');
 }
@@ -1827,16 +2421,14 @@ function renderTop10(){
 function renderAll(){
   const c1=DATA.p1.cartes, i1=DATA.p1.items;
   const s1=computeStats(c1,i1);
-  renderTicker(c1, i1);
-  renderOverview(s1, null);
+  renderOverviewFinary(c1, i1);
   renderHealth(c1, i1);
   renderAlerts(c1, i1);
   renderCartes(c1);
   renderScelle(i1);
   renderPerfTables(c1, i1);
-  renderCompare();
-  renderEvolution();
-  document.getElementById('footer-info').textContent=`${c1.length} cartes · ${i1.length} items · Total : ${(s1.totalCartes+s1.totalItems).toLocaleString('fr-FR',{minimumFractionDigits:2})} €`;
+  document.getElementById('footer-info').textContent=`${c1.length} cartes · ${i1.length} items`;
+  document.getElementById('footer-date').textContent=`Généré le __GEN_DATE__`;
 }
 
 /* ── TABS ── */
