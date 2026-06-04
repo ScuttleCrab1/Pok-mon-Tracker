@@ -274,7 +274,12 @@ def main():
     if periods:
         last = periods[-1]
         last_total = last.get('totalCartes', 0) + last.get('totalItems', 0)
-        if abs(last_total - total) < 0.01 and last.get('date') == today:
+        # Ne pas créer si même total (données inchangées)
+        if abs(last_total - total) < 0.01:
+            should_save = False
+            print("  ℹ Données inchangées, pas de nouvelle période créée")
+        # Ne pas créer si déjà une période aujourd'hui
+        elif last.get('date') == today:
             should_save = False
             print("  ℹ Période d'aujourd'hui déjà enregistrée, pas de doublon")
 
