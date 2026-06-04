@@ -904,7 +904,7 @@ function computeStats(cartes,items){
     blocs[c['Bloc']].count++;blocs[c['Bloc']].val+=c._actuel;
   });
   items.forEach(i=>{if(!types[i['Item']])types[i['Item']]={gain:0,val:0};types[i['Item']].gain+=i._gain;types[i['Item']].val+=i._actuel;});
-  const top10=[...cartes].sort((a,b)=>b._actuel-a._actuel).slice(0,5);
+  const top10=[...cartes].sort((a,b)=>b._actuel-a._actuel).slice(0,15);
   const worstItem=[...items].filter(i=>i._achat>0).sort((a,b)=>a._gain-b._gain)[0];
   const bestPct=[...items].filter(i=>i._achat>0&&i._pct!==null).sort((a,b)=>b._pct-a._pct)[0];
   return{totalCartes,totalItems,gainItems,etats,blocs,types,top10,worstItem,bestPct,nbCartes:cartes.length,nbItems:items.length};
@@ -972,8 +972,8 @@ function renderPerfTables(cartes, items){
       perfc.push({nom:a['Nom'],serie:a['Série'],etat:a['État'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
     }
   });
-  const topCUp=[...perfc].sort((a,b)=>b.diff-a.diff).slice(0,5);
-  const topCDown=[...perfc].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
+  const topCUp=[...perfc].sort((a,b)=>b.diff-a.diff).slice(0,15);
+  const topCDown=[...perfc].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,15);
 
   const rowC=(m,i,up)=>`<tr>
     <td class="rank">${i+1}</td>
@@ -1003,8 +1003,8 @@ function renderPerfTables(cartes, items){
       perfi.push({serie:a['Série'],type:a['Item'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
     }
   });
-  const topIUp=[...perfi].sort((a,b)=>b.diff-a.diff).slice(0,5);
-  const topIDown=[...perfi].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
+  const topIUp=[...perfi].sort((a,b)=>b.diff-a.diff).slice(0,15);
+  const topIDown=[...perfi].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,15);
 
   const rowI=(m,i,up)=>`<tr>
     <td class="rank">${i+1}</td>
@@ -1588,8 +1588,8 @@ let _top5Mode = { cartes:'eur', items:'eur' };
 function renderFeatured() {
   const c1 = DATA.p1.cartes, i1 = DATA.p1.items;
   const sorted = [...PERIODS].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  _top5CartesData = [...c1].sort((a,b)=>b._actuel-a._actuel).slice(0,5);
-  _top5ItemsData  = [...i1].sort((a,b)=>b._actuel-a._actuel).slice(0,5);
+  _top5CartesData = [...c1].sort((a,b)=>b._actuel-a._actuel).slice(0,15);
+  _top5ItemsData  = [...i1].sort((a,b)=>b._actuel-a._actuel).slice(0,15);
   renderFeaturedCarte(_featCarteIdx, sorted);
   renderFeaturedItem(_featItemIdx, sorted);
   renderTop5('cartes');
@@ -2150,8 +2150,8 @@ function renderCompare(){
   const allKeysc=new Set([...Object.keys(map1c),...Object.keys(map2c)]);
   const moversc=[];
   allKeysc.forEach(k=>{const a=map1c[k],b=map2c[k];if(a&&b){const diff=b._actuel-a._actuel;if(Math.abs(diff)>.005)moversc.push({nom:a['Nom'],serie:a['Série'],etat:a['État'],v1:a._actuel,v2:b._actuel,diff,pct:a._actuel>0?diff/a._actuel*100:0});}});
-  const topCUp=[...moversc].sort((a,b)=>b.diff-a.diff).slice(0,5);
-  const topCDown=[...moversc].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,5);
+  const topCUp=[...moversc].sort((a,b)=>b.diff-a.diff).slice(0,15);
+  const topCDown=[...moversc].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,15);
 
   // Items movers
   const map1i=Object.fromEntries(i1.map(i=>[i._key,i]));
@@ -2159,8 +2159,8 @@ function renderCompare(){
   const allKeysi=new Set([...Object.keys(map1i),...Object.keys(map2i)]);
   const moversi=[];
   allKeysi.forEach(k=>{const a=map1i[k],b=map2i[k];if(a&&b){const diff=b._actuel-a._actuel;if(Math.abs(diff)>.005)moversi.push({serie:a['Série'],type:a['Item'],v1:a._actuel,v2:b._actuel,diff,pct:a._actuel>0?diff/a._actuel*100:0});}});
-  const topIUp=[...moversi].sort((a,b)=>b.diff-a.diff).slice(0,5);
-  const topIDown=[...moversi].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,5);
+  const topIUp=[...moversi].sort((a,b)=>b.diff-a.diff).slice(0,15);
+  const topIDown=[...moversi].sort((a,b)=>a.diff-b.diff).filter(m=>m.diff<0).slice(0,15);
 
   const newCards=[...allKeysc].filter(k=>!map1c[k]&&map2c[k]).map(k=>map2c[k]);
   const goneCards=[...allKeysc].filter(k=>map1c[k]&&!map2c[k]).map(k=>map1c[k]);
@@ -2233,7 +2233,7 @@ function renderCompare(){
       ${newCards.length?`<div><div class="section-title">✨ Nouvelles cartes (${newCards.length})</div>
         <div class="table-wrap"><div class="table-scroll"><table>
           <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur</th></tr></thead>
-          <tbody>${newCards.slice(0,5).map(c=>`<tr>
+          <tbody>${newCards.slice(0,15).map(c=>`<tr>
             <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
             <td>${tagEtat(c['État'])}</td><td class="tr mono change-new">+${eur(c._actuel)}</td>
           </tr>`).join('')}</tbody>
@@ -2241,7 +2241,7 @@ function renderCompare(){
       ${goneCards.length?`<div><div class="section-title">🔴 Cartes retirées (${goneCards.length})</div>
         <div class="table-wrap"><div class="table-scroll"><table>
           <thead><tr><th>Carte</th><th>État</th><th class="tr">Valeur</th></tr></thead>
-          <tbody>${goneCards.slice(0,5).map(c=>`<tr>
+          <tbody>${goneCards.slice(0,15).map(c=>`<tr>
             <td><div class="td-name">${c['Nom']}</div><div class="td-sub">${c['Série']}</div></td>
             <td>${tagEtat(c['État'])}</td><td class="tr mono change-gone">${eur(c._actuel)}</td>
           </tr>`).join('')}</tbody>
@@ -2368,8 +2368,8 @@ function renderTop10(){
         perf.push({nom:a['Nom'],serie:a['Série'],etat:a['État'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
       }
     });
-    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,5);
-    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
+    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,15);
+    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,15);
 
     document.getElementById('top10-content').innerHTML=`
       <div class="g2">
@@ -2418,8 +2418,8 @@ function renderTop10(){
         perf.push({serie:a['Série'],type:a['Item'],v1:a._actuel,v2:b._actuel,diff,pct:pctVal});
       }
     });
-    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,5);
-    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,5);
+    const top10up=[...perf].sort((a,b)=>b.diff-a.diff).slice(0,15);
+    const top10down=[...perf].sort((a,b)=>a.diff-b.diff).filter(x=>x.diff<0).slice(0,15);
 
     document.getElementById('top10-content').innerHTML=`
       <div class="g2">
